@@ -26,8 +26,9 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QFileDialog>
 
-cbManageRobots::cbManageRobots(cbSimulator *sim, QStringListModel *agents, QWidget *parent, Qt::WFlags fl) :
+cbManageRobots::cbManageRobots(cbSimulator *sim, QStringListModel *agents, QWidget *parent, Qt::WindowFlags fl) :
     QWidget(parent, fl),
     simulator(sim),
     ui(new Ui::cbManageRobots)

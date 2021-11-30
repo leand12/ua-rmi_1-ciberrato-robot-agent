@@ -48,55 +48,55 @@ int main( int argc, char **argv )
 	CRMainParameters *param = new CRMainParameters(); // Parametros do viewer
 
     int i=1;
-    while( i < Visualizador.argc() ) // opcao mais valor
+    while( i < argc ) // opcao mais valor
     {
-        if( strcmp(Visualizador.argv()[i], "--host") == 0 )
+        if( strcmp(argv[i], "--host") == 0 )
         {
-			 if(Visualizador.argc()<i+2 || Visualizador.argv()[i+1][0]=='-')
-				  ParameterError( Visualizador.argv()[0] ); 
+			 if(argc<i+2 || argv[i+1][0]=='-')
+				  ParameterError( argv[0] ); 
 			 char svrName[100];        
-			 sscanf( (Visualizador.argv()[i+1]), "%79[^:]:%hd",svrName ,
+			 sscanf( (argv[i+1]), "%79[^:]:%hd",svrName ,
 					 &(param->port) ); //Read the host 	
 			 param->serverAddr = svrName;
              i+=2;
         }
-        else if( strcmp(Visualizador.argv()[i], "--lowercolor") == 0 )
+        else if( strcmp(argv[i], "--lowercolor") == 0 )
         {
-            if(Visualizador.argc()<i+2 || Visualizador.argv()[i+1][0]=='-')
-                ParameterError( Visualizador.argv()[0] );
-            param->lowerColor = Visualizador.argv()[i+1];
+            if(argc<i+2 || argv[i+1][0]=='-')
+                ParameterError( argv[0] );
+            param->lowerColor = argv[i+1];
             i+=2;
         }
-        else if( strcmp(Visualizador.argv()[i], "--highercolor") == 0 )
+        else if( strcmp(argv[i], "--highercolor") == 0 )
         {
-			if(Visualizador.argc()<i+2 || Visualizador.argv()[i+1][0]=='-')
-				  ParameterError( Visualizador.argv()[0] ); 
-			param->higherColor = Visualizador.argv()[i+1];
+			if(argc<i+2 || argv[i+1][0]=='-')
+				  ParameterError( argv[0] ); 
+			param->higherColor = argv[i+1];
             i+=2;
         }
-        else if( strcmp(Visualizador.argv()[i], "--nocontrol") == 0 )
+        else if( strcmp(argv[i], "--nocontrol") == 0 )
         {
 			i+=1;
             param->control = 'n';
         }
-        else if( strcmp(Visualizador.argv()[i], "--autostart") == 0 )
+        else if( strcmp(argv[i], "--autostart") == 0 )
         {
 			i+=1;
             param->autoStart = 'y';
         }
-        else if( strcmp(Visualizador.argv()[i], "--autoconnect") == 0 )
+        else if( strcmp(argv[i], "--autoconnect") == 0 )
         {
 			i+=1;
             param->autoConnect = 'y';
         }
-        else if( strcmp(Visualizador.argv()[i], "--paramfile") == 0 )
+        else if( strcmp(argv[i], "--paramfile") == 0 )
         {
-			if(Visualizador.argc()<i+2 || Visualizador.argv()[i+1][0]=='-')
-				  ParameterError( Visualizador.argv()[0] ); 
-			paramFile = Visualizador.argv()[i+1];
+			if(argc<i+2 || argv[i+1][0]=='-')
+				  ParameterError( argv[0] ); 
+			paramFile = argv[i+1];
             i+=2;
         }
-        else if( strcmp(Visualizador.argv()[i], "--help") == 0)
+        else if( strcmp(argv[i], "--help") == 0)
         {
 			cout << "viewer-1.1.0       " << "[--host simulatorAddress:port]\n";
 			cout << "                   [--lowercolor color]\n";
@@ -108,7 +108,7 @@ int main( int argc, char **argv )
 			cout << "                   [--help]\n";
             exit(0);
         }
-        else ParameterError( Visualizador.argv()[0] );
+        else ParameterError( argv[0] );
     }
 
 	cout << "\n\tUniversidade de Aveiro\n";

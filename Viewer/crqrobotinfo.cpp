@@ -66,53 +66,53 @@ void CRQRobotInfo::skin(QString skinName)
 
 
     strcpy(backFile, "skins/");
-    strcat(backFile, skinName.toAscii());
+    strcat(backFile, skinName.toLatin1());
     strcat(backFile, "/robbg.png");
 
     strcpy(rob1File, "skins/");
-    strcat(rob1File, skinName.toAscii());
+    strcat(rob1File, skinName.toLatin1());
     strcat(rob1File, "/rob1/rob.png");
 
     strcpy(rob2File, "skins/");
-    strcat(rob2File, skinName.toAscii());
+    strcat(rob2File, skinName.toLatin1());
     strcat(rob2File, "/rob2/rob.png");
 
     strcpy(rob3File, "skins/");
-    strcat(rob3File, skinName.toAscii());
+    strcat(rob3File, skinName.toLatin1());
     strcat(rob3File, "/rob3/rob.png");
 
     strcpy(rob4File, "skins/");
-    strcat(rob4File, skinName.toAscii());
+    strcat(rob4File, skinName.toLatin1());
     strcat(rob4File, "/rob4/rob.png");
 
     strcpy(rob5File, "skins/");
-    strcat(rob5File, skinName.toAscii());
+    strcat(rob5File, skinName.toLatin1());
     strcat(rob5File, "/rob5/rob.png");
 
     robFiles << backFile << rob1File << rob2File << rob3File << rob4File << rob5File;
 
     strcpy(runFile, "skins/");
-    strcat(runFile, skinName.toAscii());
+    strcat(runFile, skinName.toLatin1());
     strcat(runFile, "/states/running.png");
 
     strcpy(waitFile, "skins/");
-    strcat(waitFile, skinName.toAscii());
+    strcat(waitFile, skinName.toLatin1());
     strcat(waitFile, "/states/waiting.png");
 
     strcpy(stopFile, "skins/");
-    strcat(stopFile, skinName.toAscii());
+    strcat(stopFile, skinName.toLatin1());
     strcat(stopFile, "/states/stopped.png");
 
     strcpy(returnFile, "skins/");
-    strcat(returnFile, skinName.toAscii());
+    strcat(returnFile, skinName.toLatin1());
     strcat(returnFile, "/states/returning.png");
 
     strcpy(removeFile, "skins/");
-    strcat(removeFile, skinName.toAscii());
+    strcat(removeFile, skinName.toLatin1());
     strcat(removeFile, "/states/removed.png");
 
     strcpy(finishFile, "skins/");
-    strcat(finishFile, skinName.toAscii());
+    strcat(finishFile, skinName.toLatin1());
     strcat(finishFile, "/states/finished.png");
 
     QSize scale = ui->label_State->size();

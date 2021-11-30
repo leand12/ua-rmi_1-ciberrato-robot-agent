@@ -38,7 +38,7 @@ class cbParamDialog : public QDialog, private Ui::cbParamDialogBase
     Q_OBJECT
 
 public:
-    cbParamDialog( cbSimulator *sim, QWidget* parent = 0, Qt::WFlags fl = 0 );
+    cbParamDialog( cbSimulator *sim, QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~cbParamDialog();
 
 protected:

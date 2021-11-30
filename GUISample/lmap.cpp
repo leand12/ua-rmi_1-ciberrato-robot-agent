@@ -20,7 +20,7 @@
 /*
  * class LMap
  */
- 
+
 #include <qstring.h>
 
 #include "lmap.h"
@@ -33,7 +33,7 @@ LMap::LMap()
         }
     }
 }
- 
+
 bool LMap::startDocument()
 {
     return TRUE;
@@ -44,7 +44,7 @@ bool LMap::endDocument()
 	return TRUE;
 }
 
-bool LMap::startElement( const QString&, const QString&, const QString& qName, 
+bool LMap::startElement( const QString&, const QString&, const QString& qName,
                                     const QXmlAttributes& attr)
 {
 	/* process begin tag */
@@ -60,16 +60,16 @@ bool LMap::startElement( const QString&, const QString&, const QString& qName,
         int col=0;
 		while (!spec->isNull()) {
             if(row % 2 == 0) { // only vertical walls are allowed here
-                if(spec->toAscii()=='|') {                 
+                if(spec->toLatin1()=='|') {
                     lmap[row][(col+1)/3*2-1] = '|';
                 }
             }
-            else {// only horizontal walls are allowed at odd rows 
+            else {// only horizontal walls are allowed at odd rows
                 if(col % 3 == 0) { // if there is a wall at this collumn then there must also be a wall in the next one
-                    if(spec->toAscii()=='-') {  
+                    if(spec->toLatin1()=='-') {
                         lmap[row][col/3*2] = '-';
                     }
-    
+
                 }
             }
             spec++;

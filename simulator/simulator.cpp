@@ -136,7 +136,7 @@ double  cbBeaconSensor::sensorAperture    = M_PI;
 
 void CommandLineError()
 {
-    QMessageBox::critical(0,"Error", 
+    QMessageBox::critical(0,"Error",
 		    "SYNOPSIS: simulator [--lab file] [--grid file] [--log file] [--param file] [--port portnumber] [--showgraph id] [--gps] [--beacon]",
 		    QMessageBox::Ok, Qt::NoButton, Qt::NoButton);
     exit(1);
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
     //cout << "Parse command line (First Pass) ..."
 
     int p=1;
-	while (p < argc) 
+	while (p < argc)
 	{
         if (strcmp(argv[p], "--lab") == 0) {
             if (p+1 < argc) {
@@ -240,16 +240,16 @@ int main(int argc, char *argv[])
             CommandLineError();
 		}
 	}
-	
+
 	/* change parameteres object */
 	if (paramFilename) // a parameters file is given
 		simulator.changeParameters(paramFilename);
 
     //cout << "Parse command line (Second Pass) ..."
-	// The second pass of command line arguments overrides 
+	// The second pass of command line arguments overrides
     // parameters values that are defined in parameters file
     p=1;
-	while (p < argc) 
+	while (p < argc)
 	{
         if (strcmp(argv[p], "--lab") == 0) {
             if (p+1 < argc) {
@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
             CommandLineError();
 		}
 	}
-	
+
 	//cout << " done.\n";
 
 	/* change lab object */
@@ -341,8 +341,7 @@ int main(int argc, char *argv[])
     if(logFilename)
         simulator.setLogFilename(logFilename);
 
-	simulator.setReceptionistAt(port);
-
+    simulator.setReceptionistAt(port);
     simulator.buildGraph();
     //simulator.setDistMaxFromGridToTarget();
 

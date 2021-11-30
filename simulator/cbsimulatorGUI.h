@@ -56,7 +56,7 @@ class cbSimulatorGUI : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit cbSimulatorGUI( cbSimulator *sim, QWidget* parent = 0, Qt::WFlags fl = 0 );
+    explicit cbSimulatorGUI( cbSimulator *sim, QWidget* parent = 0, Qt::WindowFlags fl = 0 );
     ~cbSimulatorGUI();
 
     void appendMessage(const QString msg, const bool isErr = 0);

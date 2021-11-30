@@ -20,7 +20,7 @@
 /*
  * class cbLogHandler
  */
- 
+
 #include "cblabhandler.h"
 #include "cbgridhandler.h"
 #include "cbparamhandler.h"
@@ -28,7 +28,7 @@
 #include "cbloghandler.h"
 
 #include <qstring.h>
- 
+
 bool cbLogHandler::startDocument()
 {
     log = 0;
@@ -47,7 +47,7 @@ bool cbLogHandler::startDocument()
 }
 
 bool cbLogHandler::endDocument()
-{	
+{
 	if(labHandler!=0) {
 	    lab = labHandler->parsedLab();
 	    delete labHandler;
@@ -71,7 +71,7 @@ bool cbLogHandler::endDocument()
 	return TRUE;
 }
 
-bool cbLogHandler::startElement( const QString&, const QString&, const QString& qName, 
+bool cbLogHandler::startElement( const QString&, const QString&, const QString& qName,
                                     const QXmlAttributes& attr)
 {
 	/* process begin tag */
@@ -93,7 +93,7 @@ bool cbLogHandler::startElement( const QString&, const QString&, const QString& 
 
 		gridHandler=new cbGridHandler( reader, this, attr);
 		reader->setContentHandler(gridHandler);
-	}	
+	}
 	else if (tag == "Parameters")
 	{
 		type = PARAM;			//Next time startElement will process one PARAM
@@ -115,7 +115,7 @@ bool cbLogHandler::startElement( const QString&, const QString&, const QString& 
 		int robId=-1;
 
 		const QString &idAttr = attr.value(QString("Id"));
-		if (!idAttr.isNull()) { 
+		if (!idAttr.isNull()) {
 			robId=idAttr.toInt();
 		        robot.setId(robId);
 		}
@@ -123,13 +123,13 @@ bool cbLogHandler::startElement( const QString&, const QString&, const QString& 
 
 		robot.setTime(time);
 		const QString &nameAttr = attr.value(QString("Name"));
-		if (!nameAttr.isNull()) { 
-                robot.setName(nameAttr.toAscii());
+		if (!nameAttr.isNull()) {
+                robot.setName(nameAttr.toLatin1());
 		}
 
 		const QString &stateAttr = attr.value(QString("State"));
-		if (!stateAttr.isNull()) { 
-                robot.setState(stateAttr.toAscii());
+		if (!stateAttr.isNull()) {
+                robot.setState(stateAttr.toLatin1());
 		}
 	}
 	else if (tag == "Pos")

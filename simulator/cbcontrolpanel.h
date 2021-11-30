@@ -44,9 +44,9 @@ class cbControlPanel;
 class cbControlPanel : public QWidget
 {
     Q_OBJECT
-    
+
 public:
-    explicit cbControlPanel(cbSimulator *sim, QStringListModel *agents, QWidget *parent = 0, Qt::WFlags fl= 0);
+    explicit cbControlPanel(cbSimulator *sim, QStringListModel *agents, QWidget *parent = 0, Qt::WindowFlags fl= 0);
     ~cbControlPanel();
 
 signals:

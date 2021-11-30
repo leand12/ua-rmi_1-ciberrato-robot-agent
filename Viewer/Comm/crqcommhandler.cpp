@@ -52,7 +52,7 @@ bool CRQCommHandler::startElement( const QString&, const QString&,
 	{
         case UNKNOWN:
         {
-			// process begin tag 
+			// process begin tag
             if( tag == "Lab" )
             {
                 type = LAB;			//Next time startElement will process one LAB
@@ -60,7 +60,7 @@ bool CRQCommHandler::startElement( const QString&, const QString&,
                 // process attributes
                 const QString name = attr.value(QString("Name"));
                 if( !name.isNull() )
-                    lab->setName( name.toAscii() );
+                    lab->setName( name.toLatin1() );
 
                 const QString width = attr.value(QString("Width"));
                 if( !width.isNull() )
@@ -84,7 +84,7 @@ bool CRQCommHandler::startElement( const QString&, const QString&,
                 // process attributs
                 const QString name = attr.value( QString( "Name" ) );
                 if( !name.isNull() )
-                    robot->setName( name.toAscii() );
+                    robot->setName( name.toLatin1() );
 
                 const QString id = attr.value( QString( "Id" ) );
                 if( !id.isNull() )
@@ -100,7 +100,7 @@ bool CRQCommHandler::startElement( const QString&, const QString&,
 
                 const QString collision =  attr.value( QString( "Collision" ) );
                 if( !collisions.isNull() )
-                    robot->setCollision( collision.toAscii() );
+                    robot->setCollision( collision.toLatin1() );
 
                 const QString state =  attr.value( QString( "State" ) );
                 if( !state.isNull() )
@@ -236,7 +236,7 @@ bool CRQCommHandler::startElement( const QString&, const QString&,
 			break;
         } // End of element Grid
 
-		case ROBOT:  // if received element was one 
+		case ROBOT:  // if received element was one
         {
 			if( tag == "Position" )
             {

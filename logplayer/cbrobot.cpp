@@ -29,7 +29,7 @@
 using std::cerr;
 using std::cout;
 
-cbRobot::cbRobot() 
+cbRobot::cbRobot()
 {
 	name = "Demo";
 	id = 0;
@@ -79,14 +79,14 @@ unsigned int cbRobot::Id()
 }
 
 void cbRobot::setReturningLed(bool l)
-{ 
+{
     recReturningLed=true;
 
     returningLed=l;
 }
 
 void cbRobot::resetReceivedFlags(void)
-{ 
+{
     recLeftMotor=recRightMotor=recReturningLed=recEndLed=false;
 }
 
@@ -103,7 +103,7 @@ void cbRobot::changeActiveState()
 
 
 /*!
-	Fill in given xml buffer with robot state, that is, name, id, 
+	Fill in given xml buffer with robot state, that is, name, id,
 	score, number of collisions, the collision state, removed states, and current position.
 	Return the length of the xml message.
 */
@@ -120,12 +120,12 @@ unsigned int cbRobot::toXml(char *xml, unsigned int len) // len = buffer size no
 	n += sprintf(xml+n, " ReturningTime=\"%u\"", returningTime);
 	n += sprintf(xml+n, " Collisions=\"%u\"", collisionCount);
 	n += sprintf(xml+n, " Collision=\"%s\"", collision ? "True" : "False");
-        n += sprintf(xml+n, " VisitedMask=\"%s\"",visitedMask.toAscii().constData());
+        n += sprintf(xml+n, " VisitedMask=\"%s\"",visitedMask.toLatin1().constData());
 	n += sprintf(xml+n, " State=\"%s\">\n", StrState[_state]);
 
 	/* add position */
 	double dir = curPos.directionInDegrees();
-	n += sprintf(xml+n, "\t<Position X=\"%g\" Y=\"%g\" Dir=\"%g\"/>\n", curPos.X(), 
+	n += sprintf(xml+n, "\t<Position X=\"%g\" Y=\"%g\" Dir=\"%g\"/>\n", curPos.X(),
 			curPos.Y(), dir);
 	n += sprintf(xml+n, "</Robot>\n");
 

@@ -22,11 +22,14 @@
  *
  * Interface of Widget that displays robot sensors
  *
- * For more information about the CiberRato Robot Simulator 
+ * For more information about the CiberRato Robot Simulator
  * please see http://microrato.ua.pt/ or contact us.
  */
 
 #include <QtGui>
+#include <QGraphicsLineItem>
+#include <QGraphicsView>
+#include <QGraphicsScene>
 
 #include <vector>
 

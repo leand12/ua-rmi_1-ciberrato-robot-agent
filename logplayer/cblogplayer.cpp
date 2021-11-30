@@ -203,7 +203,7 @@ void cbLogplayer::ViewCommands()
 		}
 	}
 }
-	
+
 
 /*!
 	Send status of every robot to every view.

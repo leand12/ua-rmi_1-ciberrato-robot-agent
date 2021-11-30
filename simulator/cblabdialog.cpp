@@ -108,11 +108,12 @@ void cbLabDialog::drawLab (cbLab *lab, QGraphicsScene *scene)
             pos++;
         }
 
-        QGraphicsPolygonItem *p = new QGraphicsPolygonItem(0, scene);
+        QGraphicsPolygonItem *p = new QGraphicsPolygonItem();
         p->setPolygon(*pointArray );
         p->setVisible(true );
         p->setBrush(QBrush( color ));
         p->setZValue(6);
+        scene->addItem(p);
     }
 
     for (i = 0; i < lab->nTargets(); i++)
@@ -123,16 +124,18 @@ void cbLabDialog::drawLab (cbLab *lab, QGraphicsScene *scene)
         double target_x = target->Center().X() * zoom - radius;
         double target_y = sizeInPixels - target->Center().Y() * zoom - radius;
         QGraphicsEllipseItem *labArrival = new QGraphicsEllipseItem(target_x, target_y,
-                                                                    diam, diam,0, scene);
+                                                                    diam, diam);
         labArrival->setBrush(Qt::cyan);
         labArrival->setZValue(1);
         labArrival->setVisible(true);
+        scene->addItem(labArrival);
 
         QGraphicsEllipseItem *labArrival2 = new QGraphicsEllipseItem(target_x + 0.1 * zoom, target_y + 0.1 * zoom,
-                                                                     diam - 0.2 * zoom, diam - 0.2 * zoom,0, scene);
+                                                                     diam - 0.2 * zoom, diam - 0.2 * zoom);
         labArrival2->setBrush(Qt::black);
         labArrival2->setZValue(2);
         labArrival2->setVisible( true );
+        scene->addItem(labArrival2);
     }
 
     QList<QGraphicsPixmapItem *> *labLight = new QList<QGraphicsPixmapItem *>();
@@ -140,11 +143,12 @@ void cbLabDialog::drawLab (cbLab *lab, QGraphicsScene *scene)
     {
         cbBeacon *beacon = lab->Beacon(i);
 
-        QGraphicsPixmapItem *light = new QGraphicsPixmapItem (beaconPix,0, scene);
+        QGraphicsPixmapItem *light = new QGraphicsPixmapItem (beaconPix);
         light->setX(beacon->Center().X() * zoom - zoom);
         light->setY(sizeInPixels - beacon->Center().Y() * zoom - zoom);
         light->setZValue( 4 );
         light->setVisible( true );
+        scene->addItem(light);
         labLight->append(light);
     }
 
@@ -169,10 +173,11 @@ void cbLabDialog::drawGrid (cbLab *lab, cbGrid *grid, QGraphicsScene *scene)
         double grid_x = ((cbPosition) grid->at(i)).X() * zoom - zoom /2;
         double grid_y = sizeInPixels - ((cbPosition) grid->at(i)).Y() * zoom - zoom /2;
         startP[i] = new QGraphicsEllipseItem(grid_x, grid_y,
-                                             1 * zoom, 1 * zoom, 0, scene);
+                                             1 * zoom, 1 * zoom);
         startP[i]->setVisible( true );
         startP[i]->setBrush( Qt::cyan );
         startP[i]->setZValue( 3 );
+        scene->addItem(startP[i]);
     }
 
     scene->update();

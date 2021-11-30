@@ -24,15 +24,16 @@
 #include "cbparameters.h"
 
 #include <QtGui>
+#include <QPushButton>
 
-/* 
+/*
  *  Constructs a cbParamDialog which is a child of 'parent', with the
  *  widget flags set to 'fl'
  *
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  TRUE to construct a modal dialog.
  */
-cbParamDialog::cbParamDialog( cbSimulator *sim, QWidget* parent, Qt::WFlags fl )
+cbParamDialog::cbParamDialog( cbSimulator *sim, QWidget* parent, Qt::WindowFlags fl )
     : QDialog( parent, fl ),
       simulator(sim)
 {
@@ -44,8 +45,8 @@ cbParamDialog::cbParamDialog( cbSimulator *sim, QWidget* parent, Qt::WFlags fl )
     defaultParam = simulator->getDefaultParameters();
     setParamWidgets(currentParam);
 
-    connect(buttonBox->button(QDialogButtonBox::RestoreDefaults),
-            SIGNAL(clicked()), SLOT(restoreDefaults()));
+    QPushButton* button = buttonBox->button(QDialogButtonBox::RestoreDefaults);
+    connect(button, &QPushButton::clicked, this, &cbParamDialog::restoreDefaults);
 }
 
 /*
@@ -123,32 +124,32 @@ void cbParamDialog::setParamWidgets(cbParameters *param)
 void cbParamDialog::accept(void)
 {
 	int    vali;
-	double valf; 
+	double valf;
 	char   ch;
 
-    if(sscanf(lnEditSimTime->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditSimTime->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->simTime = vali;
-    if(sscanf(lnEditKeyTime->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditKeyTime->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->keyTime = vali;
-    if(sscanf(lnEditSimStep->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditSimStep->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->cycleTime = vali;
 
 	//Noise
-    if(sscanf(lnEditObstacleNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditObstacleNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->obstacleNoise = valf;
-    if(sscanf(lnEditCompassNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditCompassNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->compassNoise = valf;
-    if(sscanf(lnEditBeaconNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditBeaconNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->beaconNoise = valf;
-    if(sscanf(lnEditMotorsNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditMotorsNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->motorsNoise = valf;
-    if(sscanf(lnEditGPSLinNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditGPSLinNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->gpsLinNoise = valf;
-    if(sscanf(lnEditGPSDirNoise->text().toAscii(),"%lf%c",&valf,&ch)==1)
+    if(sscanf(lnEditGPSDirNoise->text().toLatin1(),"%lf%c",&valf,&ch)==1)
         currentParam->gpsDirNoise = valf;
 
 	//Requests
-    if(sscanf(lnEditReqPCycle->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditReqPCycle->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->nReqPerCycle = vali;
     currentParam->obstacleRequestable = cBoxReqIR->isChecked();
     currentParam->compassRequestable = cBoxReqCompass->isChecked();
@@ -158,31 +159,31 @@ void cbParamDialog::accept(void)
     currentParam->gpsRequestable = cBoxReqGPS->isChecked();
 
     //Latencies
-    if(sscanf(lnEditLatIR->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatIR->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->obstacleLatency = vali;
-    if(sscanf(lnEditLatCompass->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatCompass->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->compassLatency = vali;
-    if(sscanf(lnEditLatBeacon->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatBeacon->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->beaconLatency = vali;
-    if(sscanf(lnEditLatGround->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatGround->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->groundLatency = vali;
-    if(sscanf(lnEditLatCollision->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatCollision->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->collisionLatency = vali;
-    if(sscanf(lnEditLatGPS->text().toAscii(),"%d%c",&vali,&ch)==1)
+    if(sscanf(lnEditLatGPS->text().toLatin1(),"%d%c",&vali,&ch)==1)
         currentParam->gpsLatency = vali;
 
     //Scores
-    if(sscanf(lineEdit_ReturnPenalty->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_ReturnPenalty->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->returnTimePenalty = vali;
-    if(sscanf(lineEdit_ArrivalPenalty->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_ArrivalPenalty->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->arrivalTimePenalty = vali;
-    if(sscanf(lineEdit_WallCollPenalty->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_WallCollPenalty->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->collisionWallPenalty = vali;
-    if(sscanf(lineEdit_RobotCollPenalty->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_RobotCollPenalty->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->collisionRobotPenalty = vali;
-    if(sscanf(lineEdit_TargetReward->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_TargetReward->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->targetReward = vali;
-    if(sscanf(lineEdit_HomeReward->text().toAscii(), "%d%c", &vali, &ch) == 1)
+    if(sscanf(lineEdit_HomeReward->text().toLatin1(), "%d%c", &vali, &ch) == 1)
         currentParam->homeReward = vali;
 
     simulator->GUI()->appendMessage("New Parameters have been set!");

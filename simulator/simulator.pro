@@ -1,5 +1,6 @@
 TEMPLATE    = app
 CONFIG      += qt warn_on release thread
+DEFINES     += TRUE=1 FALSE=0
 #CONFIG      += qt warn_on debug thread
 
 win32 {
@@ -34,7 +35,7 @@ SOURCES = \
     cblabdialog.cpp
 
 TARGET  = simulator
-QT      += network  xml
+QT      += widgets network  xml
 
 FORMS   += \
     cbsimulatorGUI.ui \

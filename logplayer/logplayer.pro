@@ -1,5 +1,6 @@
 TEMPLATE	= app
 CONFIG		+= qt warn_on release thread
+DEFINES         += TRUE=1 FALSE=0
 
 win32 {
     DEFINES     += MicWindows
@@ -22,7 +23,7 @@ SOURCES		= cbbeacon.cpp cbclient.cpp\
 
 TARGET		= logplayer
 
-QT              += xml network
+QT              += widgets xml network
 
 FORMS           += logplayerGUI.ui
 

@@ -90,7 +90,7 @@ void CRQDataView::skin(QString skinFileName)
 
     //cout << "CRQDataView::skin skin name = " << skinFileName << endl;
 
-    fp = fopen(skinFileName.toAscii(), "r");
+    fp = fopen(skinFileName.toLatin1(), "r");
     if(fp == NULL)
     {
         cerr << "Unable to load file " << skinFileName.toStdString() << endl;

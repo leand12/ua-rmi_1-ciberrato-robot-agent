@@ -22,7 +22,7 @@
  *
  * Widget that displays robot sensors
  *
- * For more information about the CiberRato Robot Simulator 
+ * For more information about the CiberRato Robot Simulator
  * please see http://microrato.ua.pt/ or contact us.
  */
 
@@ -41,9 +41,9 @@ using std::cerr;
 
 
 
-SensorObstItem::SensorObstItem(QGraphicsScene *scene, 
+SensorObstItem::SensorObstItem(QGraphicsScene *scene,
                                double posx, double posy, double dir, double un)
-                               : QGraphicsEllipseItem(posx,posy,0, 0, 0, scene)
+                               : QGraphicsEllipseItem(posx,posy,0, 0)
 {
 
     setStartAngle((int)((dir+60)*16));
@@ -53,13 +53,15 @@ SensorObstItem::SensorObstItem(QGraphicsScene *scene,
     setVisible(true);
     setZValue(12);
 
+    scene->addItem(this);
+
 	unit=un;
 	Dist=0.0;
 }
 
-#define MAXDIST 1.0 
+#define MAXDIST 1.0
 
-void SensorObstItem::setDist(double measure) 
+void SensorObstItem::setDist(double measure)
 {
     double NewDist;
 
@@ -87,23 +89,26 @@ RobScene::RobScene(double irSensorAngles[NUM_IR_SENSORS])
     setSceneRect(0, 0, scene_sizex, scene_sizey);
     setBackgroundBrush(Qt::white);
 
-    QGraphicsEllipseItem *rob=new QGraphicsEllipseItem(rob_x,rob_y,rob_radius*2,rob_radius*2, 0, this);
+    QGraphicsEllipseItem *rob=new QGraphicsEllipseItem(rob_x,rob_y,rob_radius*2,rob_radius*2);
     rob->setBrush(QBrush("Blue"));
     rob->setVisible(true);
+    this->addItem(rob);
 
-    compassLine=new QGraphicsLineItem(0, this);
+    compassLine=new QGraphicsLineItem();
     compassLine->setLine(rob_x + rob_radius, rob_y + rob_radius,
                          rob_x + rob_radius, rob_y + rob_radius);
     compassLine->setZValue(10);
     compassLine->setVisible(true);
+    this->addItem(compassLine);
 
     for(int b=0; b<GetNumberOfBeacons();b++) {
-        beaconLine.push_back(new QGraphicsLineItem(0, this));
+        beaconLine.push_back(new QGraphicsLineItem());
         beaconLine[b]->setLine(rob_x + rob_radius, rob_y + rob_radius,
                                rob_x + rob_radius, rob_y + rob_radius);
         beaconLine[b]->setZValue(11);
         beaconLine[b]->setPen(QPen("Yellow"));
         beaconLine[b]->setVisible(true);
+        this->addItem(beaconLine[b]);
     }
 
     for(int i=0; i < NUM_IR_SENSORS; i++) {

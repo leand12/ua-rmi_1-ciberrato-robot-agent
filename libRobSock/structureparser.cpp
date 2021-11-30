@@ -99,12 +99,12 @@ bool StructureParser::endDocument()
 	return TRUE;
 }
 
-bool StructureParser::startElement(const QString&, const QString&, 
-                                   const QString& qName, 
+bool StructureParser::startElement(const QString&, const QString&,
+                                   const QString& qName,
                                    const QXmlAttributes& attr)
 {
     //cout.form("-------------------- startElement(...) called\n");
-    
+
 	//cerr << "StartElement qName=" << qName << "\n";
 
 	/* process begin tag */
@@ -131,12 +131,12 @@ bool StructureParser::startElement(const QString&, const QString&,
 		readAttributeDouble(attr, "BeaconNoise", &simParam.beaconNoise);
 		readAttributeDouble(attr, "ObstacleNoise", &simParam.obstNoise);
 		readAttributeDouble(attr, "MotorsNoise", &simParam.motorsNoise);
-		
+
 		//Time
 		readAttributeUInt(attr, "SimTime", &simParam.simTimeFinal);
 		readAttributeUInt(attr, "KeyTime", &simParam.keyTime);
 		readAttributeUInt(attr, "CycleTime", &simParam.cycleTime);
-		
+
 		//NBeacons
 		readAttributeUInt(attr, "NBeacons", &simParam.nBeacons);
 
@@ -186,7 +186,7 @@ bool StructureParser::startElement(const QString&, const QString&,
 		}
 		else return false;
 
-		
+
 	}
 	else if (tag == "BeaconSensor")
 	{
@@ -196,7 +196,7 @@ bool StructureParser::startElement(const QString&, const QString&,
 			unsigned int id = idStr.toUInt();
 			//cerr << "tagBeaconSensor got " << id;
 			if(id<measures.beaconReady.size()) {
-			    measures.beaconReady[id]=true; 
+			    measures.beaconReady[id]=true;
 		            const QString &valueStr = attr.value(QString("Value"));
 			    if(!valueStr.isNull()) {
 			        if(valueStr=="NotVisible") {
@@ -255,16 +255,16 @@ bool StructureParser::startElement(const QString&, const QString&,
         int col=0;
 		while (!spec->isNull()) {
             if(row % 2 == 0) { // only vertical walls are allowed here
-                if(spec->toAscii()=='|') {                 
+                if(spec->toLatin1()=='|') {
                     map[row][(col+1)/3*2-1] = '|';
                 }
             }
-            else {// only horizontal walls are allowed at odd rows 
+            else {// only horizontal walls are allowed at odd rows
                 if(col % 3 == 0) { // if there is a wall at this collumn then there must also be a wall in the next one
-                    if(spec->toAscii()=='-') {  
+                    if(spec->toLatin1()=='-') {
                         map[row][col/3*2] = '-';
                     }
-    
+
                 }
             }
             spec++;
@@ -277,10 +277,10 @@ bool StructureParser::startElement(const QString&, const QString&,
 bool StructureParser::endElement( const QString&, const QString&, const QString& qName)
 {
     //cout.form("-------------------- endElement(...) called\n");
-    
+
 	//cerr << "endElement qName=" << qName << "\n";
 
-	
+
 	/* process end tag */
 	const QString &tag = qName;
         activeTag="";

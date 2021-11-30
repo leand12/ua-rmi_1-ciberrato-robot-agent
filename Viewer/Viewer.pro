@@ -2,6 +2,7 @@ TEMPLATE = app
 CONFIG   += qt warn_off release thread
 #CONFIG   += qt warn_on debug thread
 DEPENDPATH += Lab
+DEFINES    += TRUE=1 FALSE=0
 
 #DEFINES += DEBUG
 
@@ -38,7 +39,7 @@ SOURCES += \
     crqdataview.cpp \
     crqscene.cpp
 
-QT += network xml
+QT += widgets multimedia network xml
 
 FORMS += \
     crqrobotinfo.ui \

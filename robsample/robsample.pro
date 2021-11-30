@@ -3,6 +3,7 @@ TEMPLATE = app
 DEPENDPATH += $$PWD/../libRobSock
 INCLUDEPATH += $$PWD/../libRobSock
 CONFIG += release
+DEFINES  += TRUE=1 FALSE=0
 
 win32 {
     DEFINES += MicWindows

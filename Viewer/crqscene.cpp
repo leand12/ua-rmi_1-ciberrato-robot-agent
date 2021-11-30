@@ -25,6 +25,12 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QAudioDeviceInfo>
+#include <QGraphicsView>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsPolygonItem>
+#include <QGraphicsEllipseItem>
+
 #include <assert.h>
 
 using std::vector;
@@ -45,7 +51,7 @@ CRQScene::CRQScene( CRLab *lb, QObject * parent  )
 	bgInitSprite = NULL;
 	bgGameSprite = NULL;
 
-    if(QSound::isAvailable())
+    if(!QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).isEmpty())
     {
         collisionSound = new QSound("sounds/collision.wav");
         returningSound = new QSound("sounds/first.wav");
@@ -76,10 +82,11 @@ void CRQScene::bgInitDraw(void)
 #endif
     this->setSceneRect(0, 0, 28 * zoom, 14 * zoom);
     setBackgroundBrush( QColor( 255, 255, 255 ) );
-    bgInitSprite = new QGraphicsPixmapItem( QPixmap(*bgInitImage), 0, this );
+    bgInitSprite = new QGraphicsPixmapItem( QPixmap(*bgInitImage));
 	bgInitSprite->setX( 0 );
 	bgInitSprite->setY( 0 );
     bgInitSprite->setZValue( 20 );
+    this->addItem(bgInitSprite);
     update();
 }
 
@@ -90,11 +97,12 @@ void CRQScene::bgGameDraw(void)
     cout << "CRQScene::bgGameDraw\n";
 #endif
     setBackgroundBrush( QColor( 0, 0, 0 ) );
-    bgGameSprite = new QGraphicsPixmapItem( QPixmap(*bgGameImage), 0, this );
+    bgGameSprite = new QGraphicsPixmapItem( QPixmap(*bgGameImage));
 	bgGameSprite->setX( 0 );
 	bgGameSprite->setY( 0 );
     bgGameSprite->setZValue( 0 );
     bgGameSprite->show();
+    this->addItem(bgGameSprite);
     update();
 }
 
@@ -121,7 +129,7 @@ void CRQScene::drawLab( CRLab * l_b )
     //setBackgroundBrush(QColor(0, 0, 0));
 
 	// ********* walls ************
-	unsigned int pos = 0; 
+	unsigned int pos = 0;
 	QColor color(0, 0, 0);	// Color for the walls
 	// Walls
 	vector< CRWall > *wl = lab->wallListRef();
@@ -140,10 +148,10 @@ void CRQScene::drawLab( CRLab * l_b )
             color = colorBig ;   // color depends of height
         else
 			color = colorSmall ;   // color depends of height
-		
+
         vector< CRVertice >	*points = wall->wallVectRef();//All the wall points
         QPolygon *pointArray = new QPolygon ( points->size() );
-		pos = 0;	
+		pos = 0;
 		for ( vector< CRVertice >::iterator ponto = points->begin() ;
           ponto != points->end() ; ++ponto )
         {
@@ -152,11 +160,12 @@ void CRQScene::drawLab( CRLab * l_b )
             pos++;
         }
 
-        QGraphicsPolygonItem *p = new QGraphicsPolygonItem(0, this);
+        QGraphicsPolygonItem *p = new QGraphicsPolygonItem();
         p->setPolygon( *pointArray );
 		p->setVisible( true );
         p->setBrush( QBrush( color ));
         p->setZValue(6);
+        this->addItem(p);
 		//if ( (wall->wallHeight()) > (beacon->beaconHeight()) )
 		//	{
 		//	p->setBrush( QBrush(color, QPixmap(*higherWallsFile)) );
@@ -177,30 +186,33 @@ void CRQScene::drawLab( CRLab * l_b )
         double target_x = target->Position().x() * zoom - radius;
         double target_y = sizeInPixels - target->Position().y() * zoom - radius;
         QGraphicsEllipseItem *labArrival = new QGraphicsEllipseItem(target_x, target_y,
-                                                                    diam, diam, 0, this);
+                                                                    diam, diam);
         labArrival->setBrush(Qt::cyan);
         labArrival->setZValue( 1 );
         labArrival->setVisible( true );
+        this->addItem(labArrival);
 
         QGraphicsEllipseItem *labArrival2 = new QGraphicsEllipseItem(target_x + 0.1 * zoom, target_y + 0.1 * zoom,
-                                                                     diam - 0.2 * zoom, diam - 0.2 * zoom, 0, this);
+                                                                     diam - 0.2 * zoom, diam - 0.2 * zoom);
         labArrival2->setBrush(Qt::black);
         labArrival2->setZValue( 2 );
         labArrival2->setVisible( true );
+        this->addItem(labArrival2);
     }
     QList<QGraphicsPixmapItem *> *labLight = new QList<QGraphicsPixmapItem *>();
     for ( beacon = bl->begin() ; beacon != bl->end(); ++beacon )
     {
-        QGraphicsPixmapItem *light = new QGraphicsPixmapItem (QPixmap(*beaconFile),0, this);
+        QGraphicsPixmapItem *light = new QGraphicsPixmapItem (QPixmap(*beaconFile));
         light->setX( beacon->beacon().x() * zoom - light->pixmap().width()/2);
         light->setY( sizeInPixels -  beacon->beacon().y() * zoom - light->pixmap().height()/2);
 
         light->setZValue( 4 );
-		light->setVisible( true );
+	light->setVisible( true );
+        this->addItem(light);
         labLight->append(light);
     }
 
-	labStatus = 1; 
+	labStatus = 1;
     update();
 }
 
@@ -221,14 +233,14 @@ void CRQScene::drawGrid( CRLab * l_b )
         {
             double grid_x = lab->grid()->getPosition(n)->position.x() * zoom - zoom/2;
             double grid_y = sizeInPixels - lab->grid()->getPosition(n)->position.y() * zoom - zoom/2;
-            startP[n] = new QGraphicsEllipseItem(0, 0,
-                                                 1 * zoom, 1 * zoom, 0, this);
+            startP[n] = new QGraphicsEllipseItem(0, 0, 1 * zoom, 1 * zoom);
             startP[n]->setX(grid_x);
             startP[n]->setY(grid_y);
 			startP[n]->setVisible( true );
 			startP[n]->setBrush( Qt::cyan );
             //startP[n]->setBrush( QBrush(color, QPixmap(*startFile[n])) );
             startP[n]->setZValue( 3 );
+            this->addItem(startP[n]);
         }//Constroi todos os elementos da grelha de partida
 
     } //Valida se lab e grid existem
@@ -251,7 +263,7 @@ int CRQScene::drawRobot( CRLab * l_b )
     if (robotsVarStatus == 0)
     {
 		if( lab->grid() != NULL )		// if grid exist
-			nRobots = lab->grid()->howManyPositions(); 
+			nRobots = lab->grid()->howManyPositions();
 
 		usedId = new int[nRobots];   // estado dos robots
 		for ( int n = 0; n < nRobots; n++ )
@@ -272,7 +284,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                 dir += 360;
             if( usedId[ rob->id() - 1] == 0 ) // if robot not created
             {
-                QGraphicsPixmapItem *robot = new QGraphicsPixmapItem(0, this);
+                QGraphicsPixmapItem *robot = new QGraphicsPixmapItem();
 
                 if(rob->state() == CRRobot::RETURNING)
                     robot->setPixmap(*robPixmapReturn[rob->id() - 1]);
@@ -292,6 +304,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                 robot->setVisible( true );
                 robot->setZValue( 5 );
                 robot->setRotation(-dir);
+                this->addItem(robot);
 
 				robots[rob->id() - 1] = robot; //Add new robot to vector
                 usedId[rob->id() - 1] = 1;	   //Update the var used
@@ -319,7 +332,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                         rob->state() != CRRobot::REMOVED)
                 {
                     robot->setPixmap(*robPixmapCollision[rob->id() - 1]);
-                    if(QSound::isAvailable() && sound == 'y')
+                    if(!QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).isEmpty() && sound == 'y')
                         collisionSound->play();
                 }
                 else
@@ -338,7 +351,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                 if(rob->state() == CRRobot::RETURNING &&
                         playSoundReturning[rob->id() - 1])
                 {
-                    if(QSound::isAvailable() && sound == 'y')
+                    if(!QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).isEmpty() && sound == 'y')
                         returningSound->play();
 
                     playSoundReturning[rob->id() - 1] = 0;
@@ -347,7 +360,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                 if(rob->state() == CRRobot::FINISHED &&
                         playSoundFinished[rob->id() - 1])
                 {
-                    if(QSound::isAvailable() && sound == 'y')
+                    if(!QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).isEmpty() && sound == 'y')
                         finishedSound->play();
 
                     playSoundFinished[rob->id() - 1] = 0;
@@ -478,7 +491,7 @@ void CRQScene::skin(QString skinFileName)
 		beaconFile = new QString("skins/");
 		beaconFile->append(skinName);
 		beaconFile->append("/beacon.png");
-		
+
 		//Init background
 		bgInitImage = new QString("skins/");
 		bgInitImage->append(skinName);

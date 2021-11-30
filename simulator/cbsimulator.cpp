@@ -1,4 +1,4 @@
-/*
+/*<QGraphicsView>
     This file is part of ciberRatoToolsSrc.
 
     Copyright (C) 2001-2018 Universidade de Aveiro
@@ -52,6 +52,12 @@
 #include <QVector>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QFileDialog>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsSimpleTextItem>
+#include <QGraphicsPolygonItem>
+#include <QGraphicsRectItem>
 
 using std::cerr;
 using std::cout;
@@ -1083,8 +1089,8 @@ void cbSimulator::buildGraph(void)
 
 	assert(grid!=0);
 	assert(grid->count()>0);
-    for(g=0; g<grid->count();g++)
-        graph->addInitPoint(cbPosition(grid->at(g)).Coord());
+        for(g=0; g<grid->count();g++)
+            graph->addInitPoint(cbPosition(grid->at(g)).Coord());
 
 	//graph->writeGraph();
 
@@ -1145,11 +1151,13 @@ cbGraphView::cbGraphView(QGraphicsScene *scene, cbSimulator *sim) : QGraphicsVie
 {
 	simulator=sim;
 
-    distLabel = new QGraphicsSimpleTextItem(0, scene);
+    /* distLabel = new QGraphicsSimpleTextItem(0, scene); */
+    distLabel = new QGraphicsSimpleTextItem();
     distLabel->setText("AAAAA");
     distLabel->setZValue(10);
     distLabel->setPen(QPen(Qt::red));
-	distLabel->setVisible(true);
+    distLabel->setVisible(true);
+    scene->addItem(distLabel);
 }
 
 void cbGraphView::mouseMoveEvent(QMouseEvent *e)
@@ -1208,10 +1216,13 @@ void cbSimulator::showGraph(int id)
         for(c=0; c<corners.size();c++)
             pa->setPoint(c,(int)(corners[c].X()*labCanvasWidth/lab->Width()),
                          (int)(labCanvasHeight-corners[c].Y()*labCanvasHeight/lab->Height()) );
-        wallCanvas = new QGraphicsPolygonItem(0, labScene);
+
+        /* wallCanvas = new QGraphicsPolygonItem(0, labScene); */
+        wallCanvas = new QGraphicsPolygonItem();
         wallCanvas->setPolygon(*pa);
         wallCanvas->setBrush(QBrush(Qt::black));
-		wallCanvas->setVisible(true);
+	wallCanvas->setVisible(true);
+        labScene->addItem(wallCanvas);
 	}
 
 
@@ -1239,20 +1250,22 @@ void cbSimulator::showGraph(int id)
 	for(x = 0; x < GRIDSIZE; x++)
 	    for(y = 0; y < GRIDSIZE; y++) {
 
-            if(distGrid[x][y]<2000) {
-                grCanvas = new QGraphicsRectItem(x*labCanvasWidth/GRIDSIZE,y*labCanvasHeight/GRIDSIZE,
-                                                 (x+1)*labCanvasWidth/GRIDSIZE - x*labCanvasWidth/GRIDSIZE,
-                                                 (y+1)*labCanvasHeight/GRIDSIZE -y*labCanvasHeight/GRIDSIZE,
-                                                 0, labScene);
-                QColor color((int)(0+distGrid[x][y]/distMax*250),
-                             (int)(0+distGrid[x][y]/distMax*250),
-                             (int)(0+distGrid[x][y]/distMax*250));
-                grCanvas->setBrush(QBrush(color));
-                grCanvas->setPen(QPen(color));
-			    grCanvas->setVisible(true);
-			    //debug
-			    //distGrid[x][y]=(int)(0+distGrid[x][y]/distMax*250);
-		    }
+                if(distGrid[x][y]<2000) {
+                    grCanvas = new QGraphicsRectItem(x*labCanvasWidth/GRIDSIZE,y*labCanvasHeight/GRIDSIZE,
+                            (x+1)*labCanvasWidth/GRIDSIZE - x*labCanvasWidth/GRIDSIZE,
+                            (y+1)*labCanvasHeight/GRIDSIZE -y*labCanvasHeight/GRIDSIZE,
+                            0);
+                    QColor color((int)(0+distGrid[x][y]/distMax*250),
+                            (int)(0+distGrid[x][y]/distMax*250),
+                            (int)(0+distGrid[x][y]/distMax*250));
+                    grCanvas->setBrush(QBrush(color));
+                    grCanvas->setPen(QPen(color));
+                    grCanvas->setVisible(true);
+                    //debug
+                    //distGrid[x][y]=(int)(0+distGrid[x][y]/distMax*250);
+
+                    labScene->addItem(grCanvas);
+                }
 
         }
     labScene->update();

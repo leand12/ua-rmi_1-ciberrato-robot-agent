@@ -41,9 +41,9 @@ class cbManageRobots;
 class cbManageRobots : public QWidget
 {
     Q_OBJECT
-    
+
 public:
-    explicit cbManageRobots(cbSimulator *sim, QStringListModel *agents, QWidget *parent = 0, Qt::WFlags fl= 0);
+    explicit cbManageRobots(cbSimulator *sim, QStringListModel *agents, QWidget *parent = 0, Qt::WindowFlags fl= 0);
     ~cbManageRobots();
 
 signals:
@@ -51,7 +51,7 @@ signals:
 
 protected:
     virtual void closeEvent(QCloseEvent *);
-    
+
 private slots:
     void resetRobWidgets(int);
     void refreshPosComboBox();

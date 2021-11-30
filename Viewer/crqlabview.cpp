@@ -2,6 +2,8 @@
 #include "ui_crqlabview.h"
 
 #include <QtGui>
+#include <QMessageBox>
+#include <QColorDialog>
 
 #include"Comm/crqcomm.h"
 #include "logotipo.xpm"

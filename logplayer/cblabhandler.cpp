@@ -20,7 +20,7 @@
 /*
  * class cbLabHandler
  */
- 
+
 #include "cblabhandler.h"
 #include "cbpoint.h"
 #include "cbwall.h"
@@ -61,7 +61,7 @@ cbLabHandler::cbLabHandler(QXmlReader *rd,
         lab->setHeight(height.toDouble());
     }
 }
- 
+
 bool cbLabHandler::startDocument()
 {
 	point = cbPoint();
@@ -79,14 +79,14 @@ bool cbLabHandler::endDocument()
 	return TRUE;
 }
 
-bool cbLabHandler::startElement( const QString&, const QString&, const QString& qName, 
+bool cbLabHandler::startElement( const QString&, const QString&, const QString& qName,
                                     const QXmlAttributes& attr)
 {
 	/* process begin tag */
 	const QString &tag = qName;
 
 	if (lab==0 && tag!="Lab") return false;
-			
+
 	if (tag == "Lab" && lab==0)
 	{
 		lab = new cbLab;

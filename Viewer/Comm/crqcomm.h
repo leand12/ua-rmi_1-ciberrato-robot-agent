@@ -43,6 +43,7 @@
 #include "crqcommhandler.h"
 
 #include <QtGui>
+#include <QVBoxLayout>
 
 class CRQLabView;
 
@@ -95,11 +96,11 @@ signals:
 
 public slots:
 	/*! Function called by the notifier to process the received information.
-	 */ 
+	 */
     void dataControler();
 
-	/*! Function called by notifier to process the received information. 
-	 * If the reply is OK, this function connect the signal of notifier 
+	/*! Function called by notifier to process the received information.
+	 * If the reply is OK, this function connect the signal of notifier
 	 * to the slot dataControler.
 	 * \sa dataControler
 	 */

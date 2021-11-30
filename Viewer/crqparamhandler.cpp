@@ -37,7 +37,7 @@ bool CRQParamHandler::endDocument()
     return TRUE;
 }
 
-bool CRQParamHandler::startElement( const QString&, const QString&, 
+bool CRQParamHandler::startElement( const QString&, const QString&,
                                     const QString& qName, const QXmlAttributes& attr)
 {
 	/* process begin tag */
@@ -71,15 +71,15 @@ bool CRQParamHandler::startElement( const QString&, const QString&,
 
         const QString control = attr.value( QString( "Control" ));
         if ( !control.isNull() )
-            paramObject->control = control[0].toAscii();
+            paramObject->control = control[0].toLatin1();
 
         const QString autoC = attr.value( QString( "AutoConnect" ));
         if ( !autoC.isNull() )
-            paramObject->autoConnect = autoC[0].toAscii();
+            paramObject->autoConnect = autoC[0].toLatin1();
 
         const QString autoS = attr.value( QString( "AutoStart" ));
         if ( !autoS.isNull() )
-            paramObject->autoStart = autoS[0].toAscii();
+            paramObject->autoStart = autoS[0].toLatin1();
 
         return true;
     }

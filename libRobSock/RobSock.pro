@@ -1,7 +1,7 @@
 TARGET = RobSock
 TEMPLATE = lib
 CONFIG   += dynamiclib release
-DEFINES  += CIBERQTAPP ROBSOCK_LIBRARY
+DEFINES  += CIBERQTAPP ROBSOCK_LIBRARY TRUE=1 FALSE=0
 INCLUDEPATH += .
 
 win32 {
@@ -23,4 +23,4 @@ SOURCES += cmeasures.cpp \
            RobSock.cpp \
            structureparser.cpp
 
-QT += xml
+QT += widgets xml

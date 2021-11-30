@@ -27,7 +27,10 @@
 
 #include <QtCore>
 #include <QtGui>
-
+#include <QFileSystemModel>
+#include <QDialog>
+#include <QGraphicsScene>
+#include <QGraphicsEllipseItem>
 
 using namespace std;
 
@@ -46,7 +49,7 @@ class cbLabDialog;
 class cbLabDialog : public QDialog
 {
     Q_OBJECT
-    
+
 public:
     explicit cbLabDialog(cbSimulator *sim, QWidget *parent = 0);
     ~cbLabDialog();

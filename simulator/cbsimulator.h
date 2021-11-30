@@ -30,6 +30,7 @@
 #include <QObject>
 #include <QVector>
 #include <QTimer>
+#include <QGraphicsView>
 #include <iostream>
 #include <vector>
 
@@ -190,7 +191,7 @@ protected: // data members
 	unsigned int curCycle;		// current simulation cycle
 	unsigned int endCycle;		// last simulation cycle
 	unsigned int cycle;			// length in miliseconds of a cycle
-	
+
 	cbLab *lab;					// the lab
 	cbGrid *grid;				// the grid
 	cbParameters *param;		// global simulation parameters
@@ -212,7 +213,7 @@ protected: // data members
     bool logging;
     ostream *logStream;
 	QString logFilename;
-	
+
 	cbGraph *graph;
 	double distMaxToTarget;
 

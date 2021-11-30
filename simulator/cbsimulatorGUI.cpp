@@ -23,6 +23,8 @@
 
 #include <QtGui>
 #include <QProcess>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "cbsimulator.h"
 #include "cbrobot.h"
@@ -36,7 +38,7 @@
 /**
  * cbSimulatorGUI contructor.
  */
-cbSimulatorGUI::cbSimulatorGUI( cbSimulator *sim, QWidget* parent, Qt::WFlags fl ) :
+cbSimulatorGUI::cbSimulatorGUI( cbSimulator *sim, QWidget* parent, Qt::WindowFlags fl ) :
     QMainWindow(parent, fl), simulator (sim),
     ui(new Ui::cbSimulatorGUI)
 {

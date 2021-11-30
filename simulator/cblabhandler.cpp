@@ -20,7 +20,7 @@
 /*
  * class cbLabHandler
  */
- 
+
 #include "cblabhandler.h"
 #include "cbpoint.h"
 #include "cbwall.h"
@@ -35,7 +35,7 @@
 #define PATHCUBESIZE  (2.0)
 #define PATHWALLWIDTH (0.05)
 #define PATHWALLGAP   (0.00)
- 
+
 bool cbLabHandler::startDocument()
 {
 	point = cbPoint();
@@ -51,14 +51,14 @@ bool cbLabHandler::endDocument()
 	return TRUE;
 }
 
-bool cbLabHandler::startElement( const QString&, const QString&, const QString& qName, 
+bool cbLabHandler::startElement( const QString&, const QString&, const QString& qName,
                                     const QXmlAttributes& attr)
 {
 	/* process begin tag */
 	const QString &tag = qName;
 
 	if (lab==0 && tag!="Lab") return false;
-			
+
 	if (tag == "Lab" && lab==0)
 	{
 		lab = new cbLab;
@@ -131,7 +131,7 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
                 int horWallStartCol, horWallEndCol;
                 while (!spec->isNull()) {
                     if(row % 2 == 0) { // only vertical walls are allowed here
-                        if(spec->toAscii()=='|') {                 
+                        if(spec->toLatin1()=='|') {
 		            wall = new cbWall;
                             wall->addCorner (((col+1)/3.0-PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+PATHWALLGAP)*PATHCUBESIZE);
                             wall->addCorner (((col+1)/3.0+PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+PATHWALLGAP)*PATHCUBESIZE);
@@ -141,21 +141,21 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
                             lab->addWall(wall);
                        }
                    }
-                   else {// only horizontal walls are allowed at odd rows 
+                   else {// only horizontal walls are allowed at odd rows
                        if(col % 3 ==0) { // if there is a wall at this collumn then there must also be a wall in the next one
 
                            // start of horizontal wall
-                           if(spec->toAscii()=='-' && ! inHorizontalWall) {  
+                           if(spec->toLatin1()=='-' && ! inHorizontalWall) {
                                inHorizontalWall = true;
                                horWallStartCol = col;
                            }
 
                            // end of horizontal wall
-                           if((spec->toAscii()==' ' && inHorizontalWall)
-                              || (spec->toAscii()=='-' && col == 39)) {
-                               
+                           if((spec->toLatin1()==' ' && inHorizontalWall)
+                              || (spec->toLatin1()=='-' && col == 39)) {
+
                                inHorizontalWall = false;
-                               if(spec->toAscii()=='-') {
+                               if(spec->toLatin1()=='-') {
                                      horWallEndCol = col;
                                }
                                else {
@@ -169,7 +169,7 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
                                wall->addCorner ((horWallStartCol/3.0+PATHWALLGAP)*PATHCUBESIZE, ((row+1)*0.5+PATHWALLWIDTH)*PATHCUBESIZE);
 
                                lab->addWall(wall);
-                               
+
                            }
 
                        }

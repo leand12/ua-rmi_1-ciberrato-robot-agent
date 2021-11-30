@@ -1,11 +1,11 @@
 TEMPLATE	= app
 TARGET		= GUISample
-DEFINES         += CIBERQTAPP
+DEFINES         += CIBERQTAPP TRUE=1 FALSE=0
 CONFIG          += qt warn_on release thread
 #CONFIG		+= qt warn_on debug thread
 DEPENDPATH += $$PWD/../libRobSock
 INCLUDEPATH += $$PWD/../libRobSock
-QT += xml
+QT += widgets xml
 
 win32 {
     DEFINES += MicWindows

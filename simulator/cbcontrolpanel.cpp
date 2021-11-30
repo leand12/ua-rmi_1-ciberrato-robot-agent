@@ -27,7 +27,7 @@
 #include <QtCore>
 #include <QtGui>
 
-cbControlPanel::cbControlPanel(cbSimulator *sim, QStringListModel *agents, QWidget *parent, Qt::WFlags fl) :
+cbControlPanel::cbControlPanel(cbSimulator *sim, QStringListModel *agents, QWidget *parent, Qt::WindowFlags fl) :
     QWidget(parent, fl),
     simulator(sim),
     ui(new Ui::cbControlPanel)
@@ -66,7 +66,9 @@ cbControlPanel::cbControlPanel(cbSimulator *sim, QStringListModel *agents, QWidg
 
     manRobWidget = new cbManageRobots(simulator, agents);
     ui->gridLayout->addWidget(manRobWidget,1,0,1,2);
-    manRobWidget->setShown(false);
+    /* manRobWidget->setShown(false); */
+    manRobWidget->hide();
+
     connect (manRobWidget, SIGNAL(closed()), ui->pushButton_ManageRobots, SLOT(toggle()));
     adjustSize();
 }
@@ -101,7 +103,10 @@ void cbControlPanel::triggerStartStop(void)
 
 void cbControlPanel::on_pushButton_ManageRobots_toggled(bool checked)
 {
-    manRobWidget->setShown(checked);
+    if (checked)
+        manRobWidget->show();
+    else
+        manRobWidget->hide();
     adjustSize();
 }
 
