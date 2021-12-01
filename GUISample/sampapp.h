@@ -23,9 +23,11 @@
  * Basic Robot Agent
  * simple version for demonstration
  *
- * For more information about the CiberRato Robot Simulator 
+ * For more information about the CiberRato Robot Simulator
  * please see http://microrato.ua.pt/ or contact us.
  */
+
+#pragma once
 
 #include <qapplication.h>
 

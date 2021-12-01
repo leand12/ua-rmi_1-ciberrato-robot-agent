@@ -44,14 +44,14 @@ startSimViewer       Startup script that runs the simulator and the Viewer
 ### Operating System and Compiler
 
 The source code was compiled with gcc/g++ - Gnu Project C/C++ Compiler
-(gcc version  5.4.0) using the Qt libraries (release 4.8) on 
-Ubuntu 16.04.
+(gcc version  9.3.0) using the Qt libraries (release 5.12.8) on Ubuntu 20.04.
 
-It is required to have the development version of Qt libraries 
-release 4.x installed in the system prior to compilation.
-It is also required to have qmake (or qmake-qt4) installed.
-
-More information on Qt can be found at https://download.qt.io/archive/qt/4.8/
+It is required to have the development version of Qt libraries
+release 5.x installed in the system prior to compilation.
+On Ubuntu 20.04 run the following:
+```bash
+sudo apt-get install qt5-default qtmultimedia5-dev
+```
 
 
 ### Instructions on how to use this release:
@@ -60,60 +60,60 @@ More information on Qt can be found at https://download.qt.io/archive/qt/4.8/
 To compile the CiberRato tools
 
         1- execute make:
- 
+
           make
 
         if this does not work you may have to execute qmake (or qmake-qt4) before executing make
- 
+
 After compiling, to run the simulator, the visualizer and 3 GUISamples
- 
+
        ./startAll
- 
+
 After compliling, to run the simulator and the Viewer
- 
+
        ./startSimViewer
- 
+
        Then each robot should be started manually
- 
+
 After compiling, to run the logplayer
- 
+
        cd logplayer
        logplayer -log <logfile>
- 
+
 To run a sample individually
- 
+
        LD_LIBRARY_PATH=../libRobSock/ ./GUISample
- 
+
 ### More Information
- 
+
     Please consult:
         http://microrato.ua.pt/
- 
+
     or Please Contact :
         Nuno Lau
         University of Aveiro
         email: nunolau@ua.pt
- 
+
         Artur C. Pereira
         University of Aveiro
         email: artur@ua.pt
- 
+
         Andreia Melo
         University of Aveiro
         email: abmelo@criticalsoftware.com
- 
+
         Antonio Neves
         University of Aveiro
         email: an@ieeta.pt
- 
+
         Joao Figueiredo
         University of Aveiro
         email: joao.figueiredo@ieeta.pt
- 
+
         Miguel Rodrigues
         University of Aveiro
         email: miguel.rodrigues@ua.pt
- 
+
  Copyright (C) 2001-2021 Universidade de Aveiro
- 
- 
+
+

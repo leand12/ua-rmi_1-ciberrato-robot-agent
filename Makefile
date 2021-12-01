@@ -1,48 +1,21 @@
 
+.PHONY: all clean
 
-all: makeSimulator makeViewer makeLogplayer makeLibRobSock makeGUISample makeRobsample
-
-makeSimulator:
-	(cd simulator; qmake -makefile)
-	make -C simulator
-
-makeViewer:
-	(cd Viewer; qmake -makefile)
-	make -C Viewer
-
-makeLogplayer:
-	(cd logplayer; qmake -makefile)
-	make -C logplayer
-
-makeLibRobSock:
-	(cd libRobSock; qmake -makefile)
-	make -C libRobSock
-
-makeGUISample:
-	(cd GUISample; qmake -makefile)
-	make -C GUISample
-
-makeRobsample:
-	(cd robsample; qmake -makefile)
-	make -C robsample
+all: build/CMakeCache.txt
+	+ @cmake --build build -- -s
 
 clean:
-	make -C simulator clean
-	make -C Viewer clean
-	make -C logplayer clean
-	make -C libRobSock clean
-	make -C GUISample clean
-	make -C robsample clean
-	make -C jClient clean
-	find . -name \*.pyc -delete
+	@echo -n "Cleaning targets... "
+	@[ -f build/CMakeCache.txt ] && \
+	cmake --build build --target clean -- -s
+	@echo "[Done]"
 
-distclean:
-	make -C simulator distclean
-	make -C Viewer distclean
-	make -C logplayer distclean
-	make -C libRobSock distclean
-	make -C GUISample distclean
-	make -C robsample distclean
-	make -C jClient clean
-	find . -name \*.pyc -delete
+distclean: clean
+	@echo -n "Removing build directory... "
+	@[ -d build ] && rm -r build
+	@echo "[Done]"
+
+build/CMakeCache.txt:
+	@[ -d build ] || mkdir -p build
+	@[ -f build/CMakeCache.txt ] || cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=On ./
 
