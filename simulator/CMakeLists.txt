@@ -48,7 +48,7 @@ set(sim_SRC
 
 add_executable(simulator ${sim_SRC})
 
-target_include_directories(simulator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(simulator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(simulator Qt5::Widgets Qt5::Network Qt5::Xml)
 
 set_target_properties(simulator PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

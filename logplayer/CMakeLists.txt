@@ -27,7 +27,7 @@ set(logplayer_SRC
 
 add_executable(logplayer ${logplayer_SRC})
 
-target_include_directories(logplayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(logplayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(logplayer Qt5::Widgets Qt5::Network Qt5::Xml)
 
 set_target_properties(logplayer PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
