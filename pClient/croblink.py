@@ -16,6 +16,8 @@ class CRobLink:
 
         self.sock = socket.socket(socket.AF_INET, # Internet
                              socket.SOCK_DGRAM) # UDP
+
+        self.sock.settimeout(2.0)
         
         msg = '<Robot Id="'+str(robId)+'" Name="'+robName+'" />'
         
@@ -40,13 +42,17 @@ class CRobLink:
         self.status = handler.status
         if self.status==0:
             self.nBeacons = handler.nBeacons
-            #print "nBeacons", self.nBeacons
+            self.simTime  = handler.simTime
+            #print("nBeacons", self.nBeacons)
 
     def readSensors(self):
-        data, (host,port) = self.sock.recvfrom(4096)
+        try:
+            data, (host,port) = self.sock.recvfrom(4096)
+        except socket.timeout:
+            exit(1)
         d2 = data[:-1]
 
-        #print "RECV : \"" + d2 +'"'
+        #print("RECV : \"" + d2.decode() +'"')
         parser = sax.make_parser()
         # Tell it what handler to use
         handler = StructureHandler()
@@ -57,7 +63,7 @@ class CRobLink:
 #        except SAXParseException:
 #            status = -1
 #            return 
-        self.status = handler.status
+        self.status    = handler.status
         self.measures  = handler.measures
         
     def driveMotors(self, lPow, rPow):
@@ -92,6 +98,8 @@ class CRobLinkAngs(CRobLink):
         self.sock = socket.socket(socket.AF_INET, # Internet
                              socket.SOCK_DGRAM) # UDP
         
+        self.sock.settimeout(2.0)
+
         msg = '<Robot Id="'+str(robId)+'" Name="'+robName+'">'
         for ir in range(NUM_IR_SENSORS):
             msg+='<IRSensor Id="'+str(ir)+'" Angle="'+str(angs[ir])+'" />'
@@ -101,7 +109,7 @@ class CRobLinkAngs(CRobLink):
         
         self.sock.sendto(msg.encode(), (host, UDP_PORT))  # TODO condider host arg
         data, (host,self.port) = self.sock.recvfrom(1024)
-        #print "received message:", data, " port ", self.port
+        #print("received message:", data, " port ", self.port)
 
         parser = sax.make_parser()
         
@@ -120,7 +128,9 @@ class CRobLinkAngs(CRobLink):
         self.status = handler.status
         if self.status==0:
             self.nBeacons = handler.nBeacons
-            #print "nBeacons", self.nBeacons
+            self.simTime  = handler.simTime
+            #print("nBeacons", self.nBeacons)
+            #print("simTime", self.simTime)
 
 class CMeasures:
 
@@ -129,8 +139,8 @@ class CMeasures:
         self.compass=0.0; 
         self.irSensorReady=[False for i in range(NUM_IR_SENSORS)]
         self.irSensor=[0.0 for i in range(NUM_IR_SENSORS)]
-        self.beaconReady = False   # TODO consider more than one beacon
-        self.beacon = (False, 0.0)
+        self.beaconReady = [] # False   # TODO consider more than one beacon
+        self.beacon =      [] # (False, 0.0)
         self.time = 0
 
         self.groundReady = False
@@ -182,6 +192,7 @@ class StructureHandler(sax.ContentHandler):
             self.status = -1
         elif name == "Parameters":
             self.nBeacons = attrs["NBeacons"]
+            self.simTime = attrs["SimTime"]
         elif name=="Measures":
             self.measures.time = int(attrs["Time"])
         elif name=="Sensors":
@@ -207,18 +218,20 @@ class StructureHandler(sax.ContentHandler):
             else: 
                 self.status = -1
         elif name == "BeaconSensor":
-            id = attrs["Id"]
+            id = int(attrs["Id"])
             #if id<self.measures.beaconReady.len():
-            if 1:
-                self.measures.beaconReady=True
+            if id==len(self.measures.beacon):   # only works if BeaconSensor is not requestable  TODO: make it work for requestable beaconSensors!
+                self.measures.beaconReady.append(True)
                 if attrs["Value"] == "NotVisible":
                     #self.measures.beaconReady[id]=(False,0.0)
-                    self.measures.beacon=(False,0.0)
+                    self.measures.beacon.append((False,0.0))
                 else:
                     #self.measures.beaconReady[id]=(True,attrs["Value"])
-                    self.measures.beacon=(True,float(attrs["Value"]))
+                    self.measures.beacon.append( (True,float(attrs["Value"])) )
             else:
                 self.status = -1
+                print('BeaconSensor cannot be correctly parsed', id, len(self.measures.beacon))
+                quit()
         elif name == "GPS":
             if "X" in attrs.keys():
                 self.measures.gpsReady = True

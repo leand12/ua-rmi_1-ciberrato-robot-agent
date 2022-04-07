@@ -372,6 +372,23 @@ void cbSimulator::setBeaconSensor(bool g)
 
 }
 
+void cbSimulator::setCompassSensor(bool g)
+{
+    if (g == param->compassSensorOn) return;
+
+    if (curState == INIT)
+    {
+        param->compassSensorOn = g;
+        cbRobot::compassSensorOn = g;
+    }
+    else
+        gui->appendMessage(QString("Cannot Change Configuration After Start - Use Reset"), true);
+
+
+    emit toggleCompassSensor(param->compassSensorOn);
+
+}
+
 bool cbSimulator::getGPS(void)
 {
 	return param->GPSOn;
@@ -380,6 +397,11 @@ bool cbSimulator::getGPS(void)
 bool cbSimulator::getBeaconSensor(void)
 {
 	return param->beaconSensorOn;
+}
+
+bool cbSimulator::getCompassSensor(void)
+{
+	return param->compassSensorOn;
 }
 
 void cbSimulator::setScoreSensor(bool g)
@@ -1485,7 +1507,8 @@ void cbSimulator::processEditParameters(void)
 	cbBeaconSensor::sensorAperture   = param->beaconAperture;
 
     cbRobot::GPSOn             = param->GPSOn;
-    cbRobot::beaconSensorOn             = param->beaconSensorOn;
+    cbRobot::beaconSensorOn    = param->beaconSensorOn;
+    cbRobot::compassSensorOn   = param->compassSensorOn;
 	cbRobot::scoreSensorOn     = param->scoreSensorOn;
 
     //Scores

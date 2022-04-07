@@ -79,6 +79,7 @@ public:
 
 	bool getGPS(void);
 	bool getBeaconSensor(void);
+	bool getCompassSensor(void);
 	bool getScoreSensor(void);
     bool isTimed(void);
     bool collisionsIgnored(void);
@@ -152,6 +153,7 @@ public slots:
     void setScoreSensor(bool g);
     void setGPS(bool g);
     void setBeaconSensor(bool g);
+    void setCompassSensor(bool g);
     void setTime(bool);
     void setCollisions(bool);
     void setRegistrations(bool);
@@ -166,6 +168,7 @@ public slots:
 signals:
     void toggleGPS(bool);
     void toggleBeaconSensor(bool);
+    void toggleCompassSensor(bool);
     void toggleScoreSensor(bool);
 
     void toggleTime(bool);
