@@ -275,9 +275,9 @@ void cbSimulatorGUI::on_actionSave_Configuration_triggered()
 
 void cbSimulatorGUI::on_actionAbout_Simulator_triggered()
 {
-    QMessageBox::about(this,"About Explorer 2021 simulator",
-         "<b>Explorer 2021 simulator</b><br>"
-         "Copyright 2001-2021 Universidade de Aveiro<br>"
+    QMessageBox::about(this,"About Explorer 2022 simulator",
+         "<b>Explorer 2022 simulator</b><br>"
+         "Copyright 2001-2022 Universidade de Aveiro<br>"
          "http://microrato.ua.pt"
          );
 }
