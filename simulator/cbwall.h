@@ -52,6 +52,8 @@ public:
 	double distance(cbPoint &, double theta);
 	double cornerDistance(cbPoint &, double, double);
 
+	bool isInside(cbPoint &p);
+
 	inline unsigned int count() { return corners.size(); }
 
 	inline cbPoint &operator[](int i) { return corners[i]; }

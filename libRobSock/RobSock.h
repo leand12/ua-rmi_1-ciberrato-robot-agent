@@ -158,6 +158,11 @@ extern bool            IsBumperReady(void);
 /* active when robot collides */
 extern bool           GetBumperSensor(void);     
 
+extern bool           IsLineSensorReady(void);
+
+extern void           GetLineSensor(bool *);     
+
+
 /*! Indicates if score can be retrieved using score sensor 
  */
 bool IsScoreReady(void);

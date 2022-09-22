@@ -259,6 +259,10 @@ public class jClient {
             //System.out.println("Measures: ir0=" + irSensor0 + " ir1=" + irSensor1 + " ir2=" + irSensor2 + "\n");
 
             //System.out.println(robName + " state " + state);
+            //System.err.print("LineSensor ");
+            //for(int i=0;i<7;i++) System.err.print(" "+cif.GetLineSensor()[i]);
+            //System.err.println();
+
 
             switch(state) {
                  case RUN:    /* Go */

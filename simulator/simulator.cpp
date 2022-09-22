@@ -124,6 +124,7 @@ bool    cbCompassSensor::sensorRequestable   = false;
 bool    cbGroundSensor::sensorRequestable    = false;
 bool    cbCollisionSensor::sensorRequestable = false;
 bool    cbGPSSensor::sensorRequestable       = false;
+bool    cbLineSensor::sensorRequestable       = false;
 
 //Latencies
 int     cbIRSensor::sensorLatency        =  0;
@@ -132,6 +133,7 @@ int     cbCompassSensor::sensorLatency   =  0;
 int     cbGroundSensor::sensorLatency    =  0;
 int     cbCollisionSensor::sensorLatency =  0;
 int     cbGPSSensor::sensorLatency       =  0;
+int     cbLineSensor::sensorLatency       =  0;
 
 double  cbBeaconSensor::sensorAperture    = M_PI;
 

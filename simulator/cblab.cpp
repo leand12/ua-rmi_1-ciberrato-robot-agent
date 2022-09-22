@@ -102,11 +102,29 @@ double cbLab::wallDistance(cbPoint &p)
 //	for (unsigned int i=0; i<walls.size(); i++)
 	for (unsigned int i=0; i<walls.size(); i++)
 	{
+		if(walls[i]->Height() <= 0.0) continue;
+
 		double dist = walls[i]->distance(p);
 		//cout.form("walls[%u]->distance(%g,%g) = %g\n", i, p.x, p.y, dist);
 		if (dist < min) min = dist;
 	}
 	return min;
+}
+
+/*!
+	Determine and return if point is inside wall
+*/
+bool cbLab::isInside(cbPoint &p)
+{
+	bool inside = false;
+	for (unsigned int i=1; i<walls.size(); i++) // wall 0 must not be considered as it models the outer border!!!
+	{
+		if (walls[i]->isInside(p)) { 
+		  inside=true;
+		  fprintf(stderr, "Inside wall %d\n",i);
+		}
+	}
+	return inside;
 }
 
 /*!
@@ -119,6 +137,8 @@ double cbLab::wallDistance(cbPoint &p, double dir)
 	double min = -1;
 	for (unsigned int i=0; i<walls.size(); i++)
 	{
+		if(walls[i]->Height() <= 0.0) continue;
+
 		double dist = walls[i]->distance(p, dir);
 		//cout.form("min = %g, dist = walls[%u]->distance(%g,%g,%g) = %g\n", min, i, p.x, p.y, dir, dist);
 		//fprintf(stderr,"min = %g, dist = walls[%u]->distance(%g,%g,%g) = %g\n", 
@@ -161,6 +181,8 @@ double cbLab::cornerDistance(cbPoint &p, double dir, double range)
 	double min = -1;
 	for (unsigned int i=0; i<walls.size(); i++)
 	{
+		if(walls[i]->Height() <= 0.0) continue; // skip wall
+
 		double dist = walls[i]->cornerDistance(p, dir, range);
 		//cout.form("min = %g, dist = walls[%u]->cornerDistance(%g,%g,%g,%g) = %g\n", min, i, p.x, p.y, dir, range, dist);
 		if (dist != -1 && (min == -1 || dist < min)) min = dist;

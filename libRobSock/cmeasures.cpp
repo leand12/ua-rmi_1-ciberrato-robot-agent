@@ -42,12 +42,18 @@ CMeasures::CMeasures(int nBeacons) : beaconReady(nBeacons), beacon(nBeacons)
 		IRSensorReady[i]=false;
 	}
 
+	for(int i=0;i<N_LINE_ELEMENTS;i++)
+	{
+		lineSensor[i] = false;
+	}
+
 	compassReady=false;
 	groundReady=false;
     collisionReady=false;
     gpsReady=false;
     gpsDirReady=false;
     scoreReady = arrivalTimeReady = returningTimeReady = collisionsReady =false;
+	lineSensorReady = false;
     score=0;
     arrivalTime=0;
     returningTime=0;

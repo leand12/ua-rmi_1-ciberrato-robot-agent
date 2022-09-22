@@ -292,6 +292,8 @@ void cbGraph::buildCornerGraph(void)
     // angles with respect to the corner)
 
     for(wi = 0; wi < lab->nWalls(); wi++) {
+
+        if (lab->Wall(wi)->Height()<=0.0) continue;
         
         vector<cbPoint> &corneri = lab->Wall(wi)->Corners();
 

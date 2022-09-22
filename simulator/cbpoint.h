@@ -54,6 +54,8 @@ public:
 
 	cbPoint & normalize(void);
 	cbPoint & rotate(double angle);
+	
+	cbPoint rotated(double angle); // does not change itself
 
 	inline bool operator==(const cbPoint &p) { return p.x==x && p.y==y; }
 	cbPoint operator-(const cbPoint &other);

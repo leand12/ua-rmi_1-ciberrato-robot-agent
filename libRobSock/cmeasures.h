@@ -25,6 +25,7 @@
 #include <QString>
 
 #define NUM_IR_SENSORS 4
+#define N_LINE_ELEMENTS 7
 
 using std::vector;
 
@@ -41,6 +42,10 @@ public:
     double  IRSensor[NUM_IR_SENSORS]; 
     vector <bool>   beaconReady;
     vector <struct beaconMeasure> beacon; 
+
+    bool   lineSensorReady;
+    vector <bool>   lineSensor;
+
     unsigned int 	time;
 
     bool    groundReady;

@@ -127,17 +127,17 @@ double cbWall::distance(cbPoint &p)
 	and angle.
 */
 /*
-	Seja \p e \theta o ponto e a direcção dados; seja \pa e \pb
+	Seja \p e \theta o ponto e a direcï¿½ï¿½o dados; seja \pa e \pb
 	os pontos definidores de uma face da parede.
 	\p e \theta definem uma recta no plano.
 	\pa e \pb definem uma recta no plano
 	As duas rectas anteriores podem ser coincidentes, paralelas ou 
 	concorrentes. 
-	No primeiro caso a distância a determinar é a menor distância
+	No primeiro caso a distï¿½ncia a determinar ï¿½ a menor distï¿½ncia
 	de \p a \pa ou a \pb.
-	No segundo caso não há distância.
-	No terceiro, é preciso verificar se o ponto de intercepção está dentro ou
-	fora do segmento de recta correspondente à face da parede.
+	No segundo caso nï¿½o hï¿½ distï¿½ncia.
+	No terceiro, ï¿½ preciso verificar se o ponto de intercepï¿½ï¿½o estï¿½ dentro ou
+	fora do segmento de recta correspondente ï¿½ face da parede.
 */
 double cbWall::distance(cbPoint &p, double theta)
 {
@@ -269,6 +269,35 @@ double cbWall::cornerDistance(cbPoint &p, double dir, double margin)
 	}
 
 	return min;
+}
+
+// adapted from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+//int pnpoly(int nvert, float *vertx, float *verty, float testx, float testy)
+//{
+//  int i, j, c = 0;
+//  for (i = 0, j = nvert-1; i < nvert; j = i++) {
+//    if ( ((verty[i]>testy) != (verty[j]>testy)) &&
+//	 (testx < (vertx[j]-vertx[i]) * (testy-verty[i]) / (verty[j]-verty[i]) + vertx[i]) )
+//       c = !c;
+//  }
+//  return c;
+//}
+bool cbWall::isInside(cbPoint &p)
+{
+	unsigned int n = corners.size();
+	if (n == 0) return false;
+	
+	bool inside=false;
+
+	int j;
+  	for (int i = 0; i < n; i++) {
+		cbPoint cornerI = corners[i];
+		cbPoint cornerJ = corners[i-1<0?n-1:i-1];
+    	if ( ((cornerI.Y()>p.Y()) != (cornerJ.Y()>p.Y())) &&
+     		(p.X() < (cornerJ.X()-cornerI.X()) * (p.Y()-cornerI.Y()) / (cornerJ.Y()-cornerI.Y()) + cornerI.X()) )
+             inside = ! inside;
+  	}
+  	return inside;
 }
 		
 void cbWall::showCorners()

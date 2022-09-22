@@ -121,9 +121,13 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
 	}
 	else if (tag == "Row" && lab!=0)
 	{
-                int row=0;
+        int row=0;
+		double height=4.0;
 		const QString &pos = attr.value(QString("Pos"));
 		if (!pos.isNull()) row = pos.toInt();
+		const QString &heightStr = attr.value(QString("Height"));
+		if (!heightStr.isNull()) height = heightStr.toDouble();
+		else height=4.0;
 		const QString &pattern = attr.value(QString("Pattern"));
                 const QChar *spec = pattern.data();
                 int col=0;
@@ -132,11 +136,12 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
                 while (!spec->isNull()) {
                     if(row % 2 == 0) { // only vertical walls are allowed here
                         if(spec->toLatin1()=='|') {
-		            wall = new cbWall;
+		            		wall = new cbWall;
                             wall->addCorner (((col+1)/3.0-PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+PATHWALLGAP)*PATHCUBESIZE);
                             wall->addCorner (((col+1)/3.0+PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+PATHWALLGAP)*PATHCUBESIZE);
                             wall->addCorner (((col+1)/3.0+PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+1.0-PATHWALLGAP)*PATHCUBESIZE);
                             wall->addCorner (((col+1)/3.0-PATHWALLWIDTH)*PATHCUBESIZE, (row*0.5+1.0-PATHWALLGAP)*PATHCUBESIZE);
+							wall->setHeight(height);
 
                             lab->addWall(wall);
                        }
@@ -161,12 +166,13 @@ bool cbLabHandler::startElement( const QString&, const QString&, const QString& 
                                else {
                                      horWallEndCol = col-3;
                                }
-		               wall = new cbWall;
+		               		   wall = new cbWall;
 
                                wall->addCorner ((horWallStartCol/3.0+PATHWALLGAP)*PATHCUBESIZE, ((row+1)*0.5-PATHWALLWIDTH)*PATHCUBESIZE);
                                wall->addCorner ((horWallEndCol/3.0+1.0-PATHWALLGAP)*PATHCUBESIZE, ((row+1)*0.5-PATHWALLWIDTH)*PATHCUBESIZE);
                                wall->addCorner ((horWallEndCol/3.0+1.0-PATHWALLGAP)*PATHCUBESIZE, ((row+1)*0.5+PATHWALLWIDTH)*PATHCUBESIZE);
                                wall->addCorner ((horWallStartCol/3.0+PATHWALLGAP)*PATHCUBESIZE, ((row+1)*0.5+PATHWALLWIDTH)*PATHCUBESIZE);
+							   wall->setHeight(height);
 
                                lab->addWall(wall);
 

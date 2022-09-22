@@ -61,6 +61,9 @@ public:
     double wallDistanceAboveHeight(cbPoint &p, double dir, double height);
 	double cornerDistance(cbPoint &, double, double);
 
+    bool isInside(cbPoint &p);
+
+
 	inline cbTarget *Target(int i) { return targets[i]; }
 	inline cbBeacon *Beacon(int i) { return beacons[i]; }
 

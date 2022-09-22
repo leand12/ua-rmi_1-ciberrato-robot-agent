@@ -22,7 +22,7 @@
 #define CBSENSOR_H
 
 /*! \file cbsensors.h
-	\brief Definição dos sensores que equipam um robô.
+	\brief Definiï¿½ï¿½o dos sensores que equipam um robï¿½.
 
 	Existem os seguintes sensores
 	<ul>
@@ -38,8 +38,10 @@
 #include <math.h>
 
 #include <queue>
+#include <vector>
 
 using std::queue;
+using std::vector;
 
 #include "cbsimulator.h"
 #include "cbpoint.h"
@@ -56,6 +58,13 @@ class cbBoolMeasure : public cbMeasure
 	public:
 	    cbBoolMeasure(bool val);
 	    bool value;
+};
+
+class cbBoolArrayMeasure : public cbMeasure
+{
+	public:
+	    cbBoolArrayMeasure(vector<bool> val);
+	    vector<bool> value;
 };
 
 class cbIntMeasure : public cbMeasure
@@ -123,10 +132,10 @@ protected:
 };
 
 /*! \class cbCollisionSensor
-	\brief Sensor de colisões
+	\brief Sensor de colisï¿½es
 	
-	Detecta se o robô se encosta a qualquer obstáculo,
-	parede ou outro robô.
+	Detecta se o robï¿½ se encosta a qualquer obstï¿½culo,
+	parede ou outro robï¿½.
 */
 class cbCollisionSensor : public cbSensor
 {
@@ -154,10 +163,10 @@ private:
 
 
 /*! \class CBGroundSensor
-		\brief Sensor de Área de Chegada
+		\brief Sensor de ï¿½rea de Chegada
 
-		Sensor do tipo ON/OFF que indica se o chão por
-		debaixo do robô é escuro ou claro.
+		Sensor do tipo ON/OFF que indica se o chï¿½o por
+		debaixo do robï¿½ ï¿½ escuro ou claro.
 */
 class cbGroundSensor : public cbSensor
 {
@@ -182,7 +191,7 @@ private:
 
 
 /*! \class CBCompassSensor
-	\brief Bússula
+	\brief Bï¿½ssula
 
 */
 class cbCompassSensor : public cbSensor
@@ -215,7 +224,7 @@ private:
 /*! \class CBBeaconSensor
 		\brief Sensor de Farol
 
-		Sensor que indica a direcção a que se encontra o farol.
+		Sensor que indica a direcï¿½ï¿½o a que se encontra o farol.
 */
 class cbBeaconSensor : public cbSensor
 {
@@ -265,11 +274,11 @@ private:
 };
 
 /*! \class CBIRSensor
-	\brief Sensor de Distância
+	\brief Sensor de Distï¿½ncia
 
-	Sensor de infra-vermelhos que permite medir a distância
-	aproximada a um obstáculo.
-	O seu posicionamento é definido em coordenadas polares.
+	Sensor de infra-vermelhos que permite medir a distï¿½ncia
+	aproximada a um obstï¿½culo.
+	O seu posicionamento ï¿½ definido em coordenadas polares.
 	Considera-se que o sensor radial relativamente a esse posicionamento.
 */
 class cbIRSensor : public cbSensor
@@ -303,6 +312,7 @@ private:
 	double value;
 	double ideal;
 };
+
 
 
 /*! \class CBGPSSensor
@@ -350,6 +360,51 @@ public:
 private:
 	void update(GPSMeasure ideal);
 	GPSMeasure value;
+};
+
+/*! \class LineSensor
+	\brief LineGrondSensor
+
+*/
+
+#define NLINESENSORELEMENTS 7
+#define LINESENSORELDIST 0.08
+
+class cbLineSensor : public cbSensor
+{
+public: // static data members
+    static double noise;
+
+public:
+	cbLineSensor(cbRobot *rob, QString sId);
+	virtual ~cbLineSensor();
+
+	void update(void);
+
+	inline void setPosition(double x) {
+		for (int i=0; i< NLINESENSORELEMENTS; i++) {
+			pos[i].x = x; 
+			pos[i].y = -i * LINESENSORELDIST+(NLINESENSORELEMENTS/2)*LINESENSORELDIST; 
+		} 
+	}
+
+	inline cbPoint &position(int i) { return pos[i]; }
+
+	inline vector<bool> Value() { 
+		cbBoolArrayMeasure *pMeas = dynamic_cast<cbBoolArrayMeasure *> (readMeasure());
+		vector<bool> falseVals = vector<bool>(NLINESENSORELEMENTS,false);
+		if(pMeas)
+		   return pMeas->value; 
+		else
+		   return falseVals;
+        }
+	static  int  sensorLatency;
+	static  bool sensorRequestable;
+
+private:
+	void update(vector<bool>);
+	cbPoint pos[NLINESENSORELEMENTS]; // (relative) position of center of line sensor
+	vector<bool> value;
 };
 
 #endif

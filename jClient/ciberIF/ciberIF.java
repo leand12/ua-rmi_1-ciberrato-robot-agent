@@ -60,6 +60,10 @@ class Measures {
 	double  [] IRSensor;
 	boolean [] IRSensorReady;
 
+	/** array of measures from line sensor */
+	boolean [] lineSensor;
+	boolean    lineSensorReady;
+
 	/** value measured from respective led */
 	boolean endLed, returningLed, visitingLed; 
 
@@ -68,15 +72,17 @@ class Measures {
 
 	/** value measured from GPS */
 	gpsMeasure	gpsData;
-        boolean         gpsReady;
+    boolean         gpsReady;
 
-        String []       hearMessage;
-       
+    String []       hearMessage;
+    
+	public static final int N_LINE_ELEMENTS = 7;
+
 
 	/** Constructor */
 	Measures(int nBeacons) {
 
-		compassReady = collisionReady = groundReady = gpsReady = false;
+		compassReady = collisionReady = groundReady = gpsReady = lineSensorReady = false;
 
 		IRSensor = new double[4];
 		IRSensorReady = new boolean [4];
@@ -92,6 +98,8 @@ class Measures {
 			beacon[b]  = new beaconMeasure();
 			beaconReady[b] = false;
 		}
+
+		lineSensor = new boolean[N_LINE_ELEMENTS];
 
 		gpsData = new gpsMeasure();
 
@@ -248,7 +256,21 @@ class SensorHandler extends DefaultHandler {
 
                  }
 	    }
-	    else if(qName.equals("Leds")) {                // Leds
+	    else if(qName.equals("LineSensor")) {            // IRSensors
+
+			if (attrs != null) {
+
+				values.lineSensorReady = true;
+
+			  	String LineValStr=attrs.getValue("Value");
+			  	if(LineValStr!=null) {
+					for(int i=0;i<Measures.N_LINE_ELEMENTS;i++) {
+				  	   values.lineSensor[i] = LineValStr.charAt(i) == '1';
+			    }
+			}
+		}
+   }
+   else if(qName.equals("Leds")) {                // Leds
 
                  if (attrs != null) {
 
@@ -611,6 +633,14 @@ public class ciberIF {
     public double GetCompassSensor() {
 	    return values.compass;
     }
+
+	/**
+     * get line sensor measure, value is the direction of robot in ground coordinates (-180.0,180.0)
+     */
+    public boolean [] GetLineSensor() {
+	    return values.lineSensor;
+    }
+	
 
     /**
      * only when IsGroundReady returns true is the ground measure significative

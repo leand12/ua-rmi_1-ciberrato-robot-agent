@@ -224,6 +224,15 @@ bool StructureParser::startElement(const QString&, const QString&,
 		readAttributeDouble(attr, "Y", &measures.y);
 		measures.gpsDirReady = readAttributeDouble(attr, "Dir", &measures.dir);
 	}
+	else if (tag == "LineSensor")
+	{
+		/* process attributes */
+		measures.lineSensorReady = true;
+		const QString &attrVal = attr.value(QString("Value"));
+		for(int i=0;i<N_LINE_ELEMENTS;i++) {
+		   measures.lineSensor.push_back(attrVal.at(i) == QChar('1'));
+	    }
+	}
 	else if (tag == "Leds")
 	{
 		readAttributeBoolOnOff(attr, "EndLed", &measures.endLed);

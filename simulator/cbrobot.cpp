@@ -88,6 +88,14 @@ cbRobot::cbRobot(const double irSensorAngle[]) : cbClient()
     GPSSensor->setRequestable(cbGPSSensor::sensorRequestable);
 	GPSSensor->setFifoLatency(cbGPSSensor::sensorLatency);
 
+	lineSensor   = new cbLineSensor(this, "LineSensor");
+	sensors.push_back(lineSensor);
+
+    lineSensor->setRequestable(cbLineSensor::sensorRequestable);
+	lineSensor->setFifoLatency(cbLineSensor::sensorLatency);
+    lineSensor->setPosition(0.7);
+
+
     simulator = 0;
     name = 0;
 	id = 0;
@@ -1451,6 +1459,15 @@ void cbRobot::sendSensors()
 	       n += sprintf(xml+n, "/>\n"); 
        }
     }
+
+    //LineSensor
+    char lineSensorStr[NLINESENSORELEMENTS+1]="";
+    for(int i=0;i<NLINESENSORELEMENTS;i++){
+        strcat(lineSensorStr,lineSensor->Value()[i]?"1":"0");
+    }
+	   if(!lineSensor->requestable || lineSensor->requested) {
+	       n += sprintf(xml+n, "\t\t<LineSensor Value=\"%s\" />\n", lineSensorStr);
+       }
 
     //Message
     unsigned int nRobots=simulator->Robots().size();

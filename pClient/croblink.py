@@ -5,6 +5,7 @@ UDP_IP = "127.0.0.1"
 UDP_PORT = 6000
 
 NUM_IR_SENSORS = 4
+NUM_LINE_ELEMENTS = 7
 
 class CRobLink:
 
@@ -137,36 +138,49 @@ class CMeasures:
     def __init__ (self):
         self.compassReady=False
         self.compass=0.0; 
+
         self.irSensorReady=[False for i in range(NUM_IR_SENSORS)]
         self.irSensor=[0.0 for i in range(NUM_IR_SENSORS)]
+
         self.beaconReady = [] # False   # TODO consider more than one beacon
         self.beacon =      [] # (False, 0.0)
+
         self.time = 0
 
         self.groundReady = False
         self.ground = -1
+
         self.collisionReady = False
         self.collision = False 
+
+        self.lineSensorReady = False
+        self.lineSensor=["0" for i in range(NUM_LINE_ELEMENTS)]
+
         self.start = False 
         self.stop = False 
+
         self.endLed = False
         self.returningLed = False
         self.visitingLed = False
+
         self.x = 0.0   
         self.y = 0.0   
         self.dir = 0.0
 
         self.scoreReady = False
         self.score = 100000
+
         self.arrivalTimeReady = False
         self.arrivalTime = 10000
+        
         self.returningTimeReady = False
         self.returningTime = 10000
+        
         self.collisionsReady = False
         self.collisions = 0
+        
         self.gpsReady = False
         self.gpsDirReady = False
-
 
         self.hearMessage=''
 
@@ -244,6 +258,9 @@ class StructureHandler(sax.ContentHandler):
                      self.measures.gpsDirReady = False
             else:
                 self.measures.gpsReady = False
+        elif name == "LineSensor":
+            self.measures.lineSensorReady = True
+            self.measures.lineSensor = list(attrs["Value"])
         elif name == "Leds":
             self.measures.endLed = (attrs["EndLed"] == "On")
             self.measures.returningLed = (attrs["ReturningLed"] == "On")

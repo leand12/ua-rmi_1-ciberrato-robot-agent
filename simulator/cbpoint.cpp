@@ -108,6 +108,16 @@ cbPoint &cbPoint::rotate(double angle)
 	return *this;
 }
 
+cbPoint cbPoint::rotated(double angle)
+{
+	cbPoint pnew;
+	pnew.x=x*cos(angle)-y*sin(angle);
+	pnew.y=x*sin(angle)+y*cos(angle);
+
+	return pnew;
+}
+
+
 cbPoint cbPoint::operator+(const cbPoint &other)
 {
     return cbPoint(x+other.x,y+other.y); 

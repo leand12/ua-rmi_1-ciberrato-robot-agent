@@ -64,6 +64,11 @@ cbGPSMeasure::cbGPSMeasure(struct GPSMeasure val)
 	value=val;
 }
 
+cbBoolArrayMeasure::cbBoolArrayMeasure(vector<bool> val) 
+{
+	value=val;
+}
+
 cbSensor::cbSensor(cbRobot *rob, QString sId)
 {
 	robot=rob;
@@ -367,8 +372,8 @@ void cbIRSensor::update(void)
 		/* determina a distancia angular desde que o centro do
 		 * robot deixa de ser visto pelo sensor ate que o robot
 		 * deixa de ser visto por completo, ou seja, considera-se
-		 * o círculo do robot tangente a linha limite do cone de
-		 * visão do sensor. */
+		 * o cï¿½rculo do robot tangente a linha limite do cone de
+		 * visï¿½o do sensor. */
 		double margin = asin(ROBOT_RADIUS/D);
 		
 		/* determine distance from sensor to robot */
@@ -449,3 +454,75 @@ void cbGPSSensor::update(GPSMeasure ideal)
     while (value.degrees < -180.0) value.degrees += (360.0);
 }
 
+
+
+/*********************************************************/
+/* LineSensor - Lines are modelled as walls of height 0.0*/
+
+cbLineSensor::cbLineSensor(cbRobot *rob, QString sId) : cbSensor(rob,sId)
+{
+	for(int i=0;i<NLINESENSORELEMENTS;i++){
+		value.push_back(false);	
+	}
+}
+
+cbLineSensor::~cbLineSensor()
+{
+}
+
+/*!
+	Update sensor measure.
+	Update sensor output based on real obstacle 
+	distance and random noise.
+	Sensor output saturates at 100.0.
+*/
+void cbLineSensor::update(vector<bool> inside)
+{
+	value = inside; // add noise?
+}
+
+/*!
+	Update infra-red sensors.
+	update length measure of every infra-red sensor based on
+	real distance to nearest obstacle.
+*/
+void cbLineSensor::update(void)
+{
+	popMeasure();
+	/* update infra-red sensors */
+	//cout.form("Updating IRSensors for robot[%u,%g,%g,%g]\n", id, X(), Y(), Dir());
+
+	cbLab *lab = robot->getSimulator()->Lab();
+
+	/* determine absolute sensor elements positions */
+    vector<cbPoint> actualPos;
+	for (int i=0; i < NLINESENSORELEMENTS; i++) {
+		actualPos.push_back(robot->Center() + pos[i].rotated(robot->Dir()) );
+	}
+
+	vector<bool> inside;
+	for (int i=0;i<NLINESENSORELEMENTS;i++) {
+	    inside.push_back(lab->isInside(actualPos[i]));
+	}
+
+/* DEBUG
+    fprintf(stderr,"LineSensor Pos ");
+	for (int i=0;i<NLINESENSORELEMENTS;i++) {
+		fprintf(stderr,"x %.3f y %.3f  ", actualPos[i].X(), actualPos[i].Y());
+	}
+
+	
+    fprintf(stderr,"\n");
+    fprintf(stderr,"lineMeas ");
+	for (int i=0;i<NLINESENSORELEMENTS;i++) {
+		fprintf(stderr,"%s",inside[i]?"1":"0");
+	}
+    fprintf(stderr,"\n");
+*/	
+
+	/* update sensor measure */
+	update(inside);
+	//cout.form("robot[%u,%g,%g,%g].irSensor[%u].update(%g); value = %g\n", 
+			//id, X(), Y(), Dir(), i, min, irSensors[i].Value());
+	pushMeasure(new cbBoolArrayMeasure(value));
+}
