@@ -25,7 +25,7 @@
 #include <QString>
 
 #define NUM_IR_SENSORS 4
-#define N_LINE_ELEMENTS 7
+
 
 using std::vector;
 

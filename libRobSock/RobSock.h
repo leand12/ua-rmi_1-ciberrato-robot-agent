@@ -41,6 +41,8 @@
 #define RIGHT  2
 #define OTHER1 3
 
+#define N_LINE_ELEMENTS 7
+
 #define CELLROWS 7
 #define CELLCOLS 14
 

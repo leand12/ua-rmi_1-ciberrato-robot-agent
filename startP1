@@ -1,11 +1,10 @@
 #!/bin/bash
 
-ARGS="--param ../Labs/rmi-2122/C1-config.xml"
-ARGS+=" --lab ../Labs/rmi-2122/P1-lab.xml"
-ARGS+=" --grid ../Labs/rmi-2122/P1-grid.xml"
+ARGS="--param ../Labs/rmi-2223/P1-config.xml"
+ARGS+=" --lab ../Labs/rmi-2223/P1-lab.xml"
+ARGS+=" --grid ../Labs/rmi-2223/P1-grid.xml"
 ARGS+=" --scoring 1"
-echo "cd simulator; ./simulator $ARGS --log debug.log" 
-(cd simulator; ./simulator $ARGS --log debug.log ) &
+(cd simulator; ./simulator $ARGS) &
 
 sleep 1
 

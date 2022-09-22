@@ -93,7 +93,7 @@ cbRobot::cbRobot(const double irSensorAngle[]) : cbClient()
 
     lineSensor->setRequestable(cbLineSensor::sensorRequestable);
 	lineSensor->setFifoLatency(cbLineSensor::sensorLatency);
-    lineSensor->setPosition(0.7);
+    lineSensor->setPosition(0.438); // Adjusted for 7 elements and 0.08 interelemdist
 
 
     simulator = 0;

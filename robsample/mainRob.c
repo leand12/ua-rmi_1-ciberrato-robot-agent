@@ -88,6 +88,14 @@ int main(int argc, char *argv[])
         /* Reading next values from Sensors */
         ReadSensors();
 
+        /* show LineSensor values */
+        bool line[7];
+        GetLineSensor(line);
+        for(int i=0;i<N_LINE_ELEMENTS;i++) {
+            fprintf(stderr,"%s",line[i]?"1":"0");
+        }
+        fprintf(stderr,"\n");
+
         if(GetFinished()) /* Simulator has received Finish() or Robot Removed */
         {
            printf(  "%s Exiting\n", rob_name );

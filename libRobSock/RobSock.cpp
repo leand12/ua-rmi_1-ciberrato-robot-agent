@@ -111,6 +111,22 @@ struct beaconMeasure GetBeaconSensor(int id)
     return (robLink->beacon(id));
 }
 
+bool IsLineSensorReady(int id)
+{
+    assert(robLink!=0);
+    return robLink->lineSensorReady();
+}
+
+void GetLineSensor(bool *lineVals)
+{
+    assert(robLink!=0);
+
+    for(int i=0;i<N_LINE_ELEMENTS;i++) {
+        lineVals[i] = robLink->lineSensor()[i];
+    }
+
+}
+
 bool IsCompassReady(void)
 {
     assert(robLink!=0);

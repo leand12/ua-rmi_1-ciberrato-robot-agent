@@ -228,6 +228,7 @@ bool StructureParser::startElement(const QString&, const QString&,
 	{
 		/* process attributes */
 		measures.lineSensorReady = true;
+		measures.lineSensor.clear();
 		const QString &attrVal = attr.value(QString("Value"));
 		for(int i=0;i<N_LINE_ELEMENTS;i++) {
 		   measures.lineSensor.push_back(attrVal.at(i) == QChar('1'));

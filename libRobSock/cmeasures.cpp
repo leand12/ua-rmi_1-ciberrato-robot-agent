@@ -44,7 +44,7 @@ CMeasures::CMeasures(int nBeacons) : beaconReady(nBeacons), beacon(nBeacons)
 
 	for(int i=0;i<N_LINE_ELEMENTS;i++)
 	{
-		lineSensor[i] = false;
+		lineSensor.push_back(false);
 	}
 
 	compassReady=false;
