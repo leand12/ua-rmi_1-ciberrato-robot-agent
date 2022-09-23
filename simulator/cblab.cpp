@@ -121,7 +121,6 @@ bool cbLab::isInside(cbPoint &p)
 	{
 		if (walls[i]->isInside(p)) { 
 		  inside=true;
-		  fprintf(stderr, "Inside wall %d\n",i);
 		}
 	}
 	return inside;
