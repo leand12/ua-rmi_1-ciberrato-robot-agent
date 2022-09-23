@@ -478,7 +478,12 @@ cbLineSensor::~cbLineSensor()
 */
 void cbLineSensor::update(vector<bool> inside)
 {
-	value = inside; // add noise?
+	for(int i=0; i<NLINESENSORELEMENTS;i++) {
+		if (randUniform(0.0, 1.0)< LINETRUEPROB) {
+			value[i]=inside[i];
+		}
+		else value[i]=!inside[i];
+	}
 }
 
 /*!

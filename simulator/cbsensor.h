@@ -369,6 +369,7 @@ private:
 
 #define NLINESENSORELEMENTS 7
 #define LINESENSORELDIST 0.08
+#define LINETRUEPROB 0.98
 
 class cbLineSensor : public cbSensor
 {
