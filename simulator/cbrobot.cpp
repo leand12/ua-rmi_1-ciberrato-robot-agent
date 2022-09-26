@@ -31,6 +31,7 @@
 #include <QTime>
 
 #include <QTextEdit>
+#include <QCoreApplication>
 
 using std::cerr;
 using std::cout;
@@ -787,8 +788,8 @@ void cbRobot::updateStateControl()
                          } 
                       }
                       if(d==180) {
-                            fprintf(stderr, "Lab has no Loop! Does not fit for this challenge!\n");
-                            exit(1);
+                            fprintf(stderr, "Lab has no Loop! Does not fit for this challenge!\n"); // TODO: add Graphical Window Warning
+                            QCoreApplication::exit(1);
                       }
                   }
 
@@ -1260,6 +1261,69 @@ void cbRobot::updateStatePlanning()
     }
 }
 
+void cbRobot::updateStateLineControl2022()
+{
+    switch(_state) {
+        case RUNNING:
+            if(removed) _state = REMOVED;
+
+            else if (simulator->state() == cbSimulator::STOPPED) {
+                _unstoppedState=_state;
+                _state=STOPPED;
+            }
+
+            else if (endLed) {
+	        _state = FINISHED;
+	    }
+
+            break;
+        case STOPPED:
+            if(removed) _state = REMOVED;
+            else if(simulator->state() != cbSimulator::STOPPED)
+                      _state=_unstoppedState;
+            // determine path first time RUNNING
+            if(_state==RUNNING && simulator->curTime()==0) {
+                  controlCellPath[0].x = curPos.X()+0.5;   // THESE CELLS are 1x1 and centered on the possible line positions
+                  controlCellPath[0].y = curPos.Y()+0.5;   // this is different from cell concept used in updateStateControl (2021)
+                  struct cell_t newCell = controlCellPath[0];
+                  newCell.x++;
+                  nCellPath=1;
+                  int dir = 0;
+                  while(newCell.x!=controlCellPath[0].x || newCell.y!=controlCellPath[0].y) {
+                      int d;
+                      struct cell_t cell = newCell;
+                      controlCellPath[nCellPath]=cell;
+                      nCellPath++;
+                      for(d=-90; d<=90; d+=90) { 
+                         if(simulator->Lab()->isInside(cbPoint(newCell.x+cos((d+dir)*M_PI/180.0)*0.5,newCell.y+sin((d+dir)*M_PI/180.0)*0.5))){
+                             newCell.x = round(cell.x + cos((dir+d)*M_PI/180.0));
+                             newCell.y = round(cell.y + sin((dir+d)*M_PI/180.0));
+                             dir = (dir + d + 360) % 360;
+
+                             break;
+                         } 
+                      }
+                      if(d==180) {
+                            fprintf(stderr, "Lab has no Loop! Does not fit for this challenge!\n");
+                            QCoreApplication::exit(1);
+                      }
+                  }
+
+                  //debug
+                  for(int i=0; i<nCellPath; i++) {
+                         printf("pathcell %d %d\n",controlCellPath[i].x, controlCellPath[i].y);
+                  }
+            }
+            break;
+        case FINISHED:
+            if(removed) _state = REMOVED;
+	default:
+	    break;
+    }
+}
+
+
+
 
 #define COLLISION_PENALTY   5
 #define NOTFINISH_PENALTY  15
@@ -1307,6 +1371,64 @@ void cbRobot::updateScoreControl()
     emit robReturnTimeChanged((int) returningTime);
     emit robScoreChanged((int) score);
 }
+
+void cbRobot::updateScoreLineControl2022()
+{
+    if (isRemoved() || hasFinished()) return;
+    
+    if (hasCollide() && !collisionPrevCycle)
+    {
+        //DEBUG
+	//simulator->grAux->addFinalPoint(id,curPos.Coord());
+        //double distCol=simulator->grAux->dist(id);
+	//cerr << simulator->curTime() << ": R" << id << " distCol=" << distCol <<"\n";
+        scorePenalties += -(collisionWallPenalty * hasCollideWall()) - (collisionRobotPenalty * hasCollideRobot());
+	collisionCount++;
+
+        emit robCollisionsChanged((int) collisionCount);
+    }
+    collisionPrevCycle=hasCollide();
+
+    switch(_state) {
+	    case RUNNING:
+		 {
+
+                    struct cell_t curCell;
+                    curCell.x = curPos.X()+0.5;
+                    curCell.y = curPos.Y()+0.5;
+                    if(curCell.x == controlCellPath[nextPathInd].x && curCell.y == controlCellPath[nextPathInd].y) {
+                        nextPathInd++;
+                        if (nextPathInd >= nCellPath) nextPathInd=0;
+                        scoreControl += 10;
+                    }
+
+                    // check if robot is outside line
+                    bool outside=true;
+                    for(int c=0 ; c < nCellPath; c++) {
+                        if(controlCellPath[c].x == curCell.x && controlCellPath[c].y==curCell.y){
+                            outside = false;
+                            break;
+                        }
+                    }
+                    if (outside) {
+                        scoreControl -=10;
+                    }
+
+		    score = scorePenalties + scoreControl;  
+
+		    if(endLedOn()) { // robot finishing at Beacon
+                        score=scorePenalties;
+		    }
+		    break;
+		 }
+	   default:
+		    break;
+    }
+    emit robArrivalTimeChanged((int) arrivalTime);
+    emit robReturnTimeChanged((int) returningTime);
+    emit robScoreChanged((int) score);
+}
+
 
 
 void cbRobot::updateScore()

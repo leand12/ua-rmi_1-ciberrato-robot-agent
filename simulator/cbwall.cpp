@@ -282,7 +282,7 @@ double cbWall::cornerDistance(cbPoint &p, double dir, double margin)
 //  }
 //  return c;
 //}
-bool cbWall::isInside(cbPoint &p)
+bool cbWall::isInside(const cbPoint &p)
 {
 	unsigned int n = corners.size();
 	if (n == 0) return false;

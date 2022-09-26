@@ -144,12 +144,14 @@ public:
 	void updateScore();
 	void updateScoreCompetitive();
 	void updateScoreControl();
+	void updateScoreLineControl2022();
 
 	void updateState();
 	void updateStateCompetitive();
 	void updateStateControl();
     void updateStateMapping();
     void updateStatePlanning();
+    void updateStateLineControl2022();
 
 	void updateSensors();
 

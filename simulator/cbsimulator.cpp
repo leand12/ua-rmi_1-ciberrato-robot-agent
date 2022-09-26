@@ -970,9 +970,12 @@ void cbSimulator::UpdateScores()
           case 1:
             robot->updateScoreControl();         // CONTROL
             break;
+          case 4:
+            robot->updateScoreLineControl2022(); // LINE CONTROL
+            break;
           default:
-           robot->updateScoreCompetitive();   // COMPETITIVE
-           //robot->updateScore();                // COOPERATIVE
+           robot->updateScoreCompetitive();      // COMPETITIVE
+           //robot->updateScore();               // COOPERATIVE
            break;
         }
 	}
@@ -1061,14 +1064,17 @@ void cbSimulator::UpdateState()
 
         switch(scoring) {
           case 1:
-            robot->updateStateControl();          // CONTROL
+            robot->updateStateControl();                  // CONTROL
              break;
           case 2:
-            robot->updateStateMapping();        // MAPPING
+            robot->updateStateMapping();                  // MAPPING
             break;
           case 3:
-            robot->updateStatePlanning();        // PLANNING
+            robot->updateStatePlanning();                 // PLANNING
             break;
+          case 4:
+            robot->updateStateLineControl2022();          // LINE CONTROL
+             break;
           default:
             robot->updateStateCompetitive();    // COMPETITIVE
             //robot->updateState();               // COOPERATIVE

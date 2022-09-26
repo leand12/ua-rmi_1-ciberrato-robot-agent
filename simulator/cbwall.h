@@ -52,7 +52,7 @@ public:
 	double distance(cbPoint &, double theta);
 	double cornerDistance(cbPoint &, double, double);
 
-	bool isInside(cbPoint &p);
+	bool isInside(const cbPoint &p);
 
 	inline unsigned int count() { return corners.size(); }
 

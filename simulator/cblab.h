@@ -61,7 +61,7 @@ public:
     double wallDistanceAboveHeight(cbPoint &p, double dir, double height);
 	double cornerDistance(cbPoint &, double, double);
 
-    bool isInside(cbPoint &p);
+    bool isInside(const cbPoint &p);
 
 
 	inline cbTarget *Target(int i) { return targets[i]; }
