@@ -153,6 +153,7 @@ public:
     void updateStatePlanning();
     void updateStateLineControl2022();
     void updateStateLineMapping2022();
+    void updateStateLinePlanning2022();
 
 	void updateSensors();
 

@@ -1076,7 +1076,10 @@ void cbSimulator::UpdateState()
             robot->updateStateLineControl2022();          // LINE CONTROL
              break;
           case 5:
-            robot->updateStateLineMapping2022();          // LINE CONTROL
+            robot->updateStateLineMapping2022();          // LINE MAPPING
+             break;
+          case 6:
+            robot->updateStateLinePlanning2022();         // LINE PLANNING
              break;
           default:
             robot->updateStateCompetitive();    // COMPETITIVE

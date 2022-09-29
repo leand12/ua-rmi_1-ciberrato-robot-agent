@@ -3,15 +3,21 @@ BEGIN {
    line=1
    score=0
    pathind = 1
+
+   linelength=49
+   nlines=21
+
+   exiting=0
 }
 
+# to read reference map, beacon list and distance from first file
 FNR==NR {
    a[NR]=$0
-   if(line<=27) {
-      mapref[28-line][0] = ""
-      nmapref=split(a[line],mapref[28-line],"") 
+   if(line<=nlines) {
+      mapref[nlines+1-line][0] = ""
+      nmapref=split(a[line],mapref[nlines+1-line],"") 
    }
-   if(line==28) {
+   if(line==nlines+1) {
       for (t=1; t<=NF; t++) {
          visited[$t] = 0
       }
@@ -31,6 +37,7 @@ FNR==NR {
         if(x!=0 || y!=0) {
              print "Path does not start at 0 0"
              print "Planning score: " 0
+             exiting=1
              exit 1
         }
         visited[0]=1
@@ -38,14 +45,15 @@ FNR==NR {
     else {
         movdirX = (x - prevX)/2
         movdirY = (y - prevY)/2
-        if(mapref[prevY+movdirY+14][prevX+movdirX+28]!="X") {
+        if(mapref[prevY+movdirY+(nlines+1)/2][prevX+movdirX+(linelength+1)/2]==" ") {
              print "prevY",prevY, "prevX", prevX ,"movY", movdirY ,"movX", movdirX
              print "Error in path"
              print "Planning score: " 0
+             exiting=1
              exit 1
         }
-        if(mapref[y+14][x+28] ~ /[0-9]/) {
-            visited[mapref[y+14][x+28]+0] = 1
+        if(mapref[y+(nlines+1)/2][x+(linelength+1)/2] ~ /[0-9]/) {
+            visited[mapref[y+(nlines+1)/2][x+(linelength+1)/2]+0] = 1
         }
     }
 
@@ -65,6 +73,10 @@ END {
 #       }
 #       print ""
 #    }
+
+     if(exiting>0) {
+         exit exiting
+     }
 
      if(x!=0 || y!=0) {
            print "Path does not finish at 0 0"
