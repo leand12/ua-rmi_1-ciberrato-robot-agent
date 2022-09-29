@@ -1322,6 +1322,88 @@ void cbRobot::updateStateLineControl2022()
     }
 }
 
+void cbRobot::updateStateLineMapping2022()
+{
+    switch(_state) {
+        case RUNNING:
+            if(removed) _state = REMOVED;
+
+            else if (simulator->state() == cbSimulator::STOPPED) {
+                _unstoppedState=_state;
+                _state=STOPPED;
+            }
+
+            else if (endLed) {
+	        _state = FINISHED;
+	    }
+
+            break;
+        case STOPPED:
+            if(removed) _state = REMOVED;
+            else if(simulator->state() != cbSimulator::STOPPED)
+                      _state=_unstoppedState;
+            // determine lab map centered on robot initial pos
+            if(_state==RUNNING && simulator->curTime()==0) {
+                  int  cells_width  = int(simulator->Lab()->Width())/2;
+                  int  cells_height = int(simulator->Lab()->Height())/2;
+                  int  lmap_width   = (cells_width-2)*4+1;
+                  int  lmap_height  = (cells_height-2)*4+1;
+                  char lmap[lmap_height][lmap_width];
+
+                  memset(lmap,' ',sizeof(lmap));
+
+                  //debug
+
+                  struct cell_t initCell = getRobotCell();;
+
+                  fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
+
+                  // find vertical lines
+                  for(int cy = 1; cy < cells_height-1; cy++) {
+                       for(int cx = 1; cx < cells_width; cx++) {
+                            if(simulator->Lab()->isInside(cbPoint(cx*2.0,cy*2.0+0.5))){
+                                 //fprintf(stderr,"not reachable %d %d -> %d %d, lmap %d %d\n", cy, cx, cy, cx+1, 
+                                 //         (cy-initCell.y)*2+lmap_height/2,(cx-initCell.x)*2+1+lmap_width/2);
+                                 lmap[(cy-initCell.y)*2+lmap_height/2+1][(cx-initCell.x)*2+lmap_width/2] = '|';
+                            }
+                       } 
+                  }
+
+                  // find horizontal lines
+                  for(int cy = 1; cy < cells_height; cy++) {
+                       for(int cx = 1; cx < lmap_width-1; cx++) {
+                            if(simulator->Lab()->isInside(cbPoint(cx*2.0+0.5,cy*2.0))){
+                                 lmap[(cy-initCell.y)*2+lmap_height/2][(cx-initCell.x)*2+1+lmap_width/2] = '-';
+                            }
+                       } 
+                  }
+
+                  //mark initial pos as I
+                  lmap[lmap_height/2][lmap_width/2] = 'I';
+
+
+                  FILE *fp=fopen("mapping.out","w");
+                  if(fp==NULL) {
+                       fprintf(stderr,"Could not create mapping file\n");
+                  }
+                  else {
+                     for(int ly = lmap_height-1; ly>=0; ly--) {
+                        for(int lx = 0; lx < lmap_width; lx++) {
+                              fprintf(fp,"%c",lmap[ly][lx]);
+                        } 
+                        fprintf(fp,"\n");
+                     }
+                     fclose(fp);
+                  }
+                  
+            }
+            break;
+        case FINISHED:
+            if(removed) _state = REMOVED;
+	default:
+	    break;
+    }
+}
 
 
 

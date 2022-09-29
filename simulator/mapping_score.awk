@@ -4,6 +4,8 @@ BEGIN {
    line=1;
    margin=2
    discount=0.85
+   linelength=49
+   nlines=21
    for(di=-margin; di<=margin; di++) {
         for(dj=-margin; dj<=margin; dj++) {
             score[di][dj]=0;
@@ -16,6 +18,7 @@ function abs(v) {v += 0; return v < 0 ? -v : v}
 function isnum(x)   { return x+0 == x }
 
 
+# to read reference map to array a
 FNR==NR {
    a[NR]=$0
 
@@ -25,15 +28,15 @@ FNR==NR {
 {
      nmap=split($0,map,"") 
 
-     if (length(map)!=55) {
-         print "line length is not correct!"
+     if (length(map)!=linelength) {
+         print "length of line " line " is not correct!"
      }
 
      for(di=-margin; di<=margin; di++) {
          if ((line+di) < 0) continue
          nmapref=split(a[line+di],mapref,"") 
-         # to allow to have planning.out as input to this script (planning.out has the map, with 55 columns, but it also has other stuff)
-         if (length(a[line+di])!=55) {
+         # to allow to have planning.out as input to this script (planning.out has the map, with linelength columns, but it also has other stuff)
+         if (length(a[line+di])!=linelength) {
             continue
          }
          for(dj=-margin; dj<=margin; dj++) {
@@ -59,7 +62,7 @@ FNR==NR {
 }
 
 END {
-    if (line!=28) {
+    if (line!=nlines+1) {
          print "number of lines is not correct!"
     }
     scoremax=-200000
