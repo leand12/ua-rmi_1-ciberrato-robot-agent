@@ -302,7 +302,7 @@ int CRQScene::drawRobot( CRLab * l_b )
                 robot->setY( sizeInPixels - rob->y() * zoom - robHeight / 2.0);
 
                 robot->setVisible( true );
-                robot->setZValue( 5 );
+                robot->setZValue( 8 );  // ACP: changed from 5 to 8 to put robot visible on top of a line
                 robot->setRotation(-dir);
                 this->addItem(robot);
 
