@@ -840,7 +840,7 @@ void cbRobot::updateStateMapping()
 
                   struct cell_t initCell = getRobotCell();;
 
-                  fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
+                  //fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
 
                   // find vertical walls
                   for(int cy = 0; cy < cells_height; cy++) {
@@ -1020,7 +1020,7 @@ void cbRobot::updateStatePlanning()
 
                   struct cell_t initCell = getRobotCell();;
 
-                  fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
+                  //fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
 
                   // find vertical walls
                   for(int cy = 0; cy < cells_height; cy++) {
@@ -1310,9 +1310,9 @@ void cbRobot::updateStateLineControl2022()
                   }
 
                   //debug
-                  for(int i=0; i<nCellPath; i++) {
-                         printf("pathcell %d %d\n",controlCellPath[i].x, controlCellPath[i].y);
-                  }
+                  //for(int i=0; i<nCellPath; i++) {
+                  //       printf("pathcell %d %d\n",controlCellPath[i].x, controlCellPath[i].y);
+                  //}
             }
             break;
         case FINISHED:
@@ -1356,7 +1356,7 @@ void cbRobot::updateStateLineMapping2022()
 
                   struct cell_t initCell = getRobotCell();;
 
-                  fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
+                  //fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
 
                   // find vertical lines
                   for(int cy = 1; cy < cells_height-1; cy++) {
@@ -1439,7 +1439,7 @@ void cbRobot::updateStateLinePlanning2022()
 
                   struct cell_t initCell = getRobotCell();;
 
-                  fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
+                  //fprintf(stderr,"initCell %d %d\n", initCell.x, initCell.y);
 
                   // find vertical lines
                   for(int cy = 1; cy < cells_height-1; cy++) {
