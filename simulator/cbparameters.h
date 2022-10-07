@@ -43,6 +43,7 @@ public:
 	double compassNoise, beaconNoise, obstacleNoise;
 	double motorsNoise;
 	double gpsLinNoise, gpsDirNoise;
+	double lineSensorTrueProb;
 
 	//Requests
 	int nReqPerCycle;

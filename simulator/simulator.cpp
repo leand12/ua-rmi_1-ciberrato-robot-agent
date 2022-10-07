@@ -97,6 +97,7 @@ double  cbGPSSensor::noiseAng = 5.0;
 double  cbGPSSensor::offsetX   = randUniform(0.0, 1000.0);
 double  cbGPSSensor::offsetY   = randUniform(0.0, 1000.0);
 double  cbGPSSensor::offsetDeg = 0.0;  // a different value would not be consistent with XY reference frame nor with compass
+double  cbLineSensor::lineTrueProb = 0.98;
 
 bool    cbRobot::GPSOn           = false;
 bool    cbRobot::beaconSensorOn  = false;

@@ -21,6 +21,7 @@
  * class cbParamHandler
  */
  
+#include <iostream> 
 #include "cbparamhandler.h"
 
 #include <qstring.h>
@@ -95,6 +96,10 @@ bool cbParamHandler::startElement( const QString&, const QString&, const QString
 		if (!gpsLinNoise.isNull()) param->gpsLinNoise = gpsLinNoise.toDouble();
 		const QString &gpsDirNoise = attr.value(QString("GPSDirNoise"));
 		if (!gpsDirNoise.isNull()) param->gpsDirNoise = gpsDirNoise.toDouble();
+		const QString &lineSensorTrueProb = attr.value(QString("LineSensorTrueProb"));
+		if (!lineSensorTrueProb.isNull()) {
+			param->lineSensorTrueProb = lineSensorTrueProb.toDouble();
+		}
 
         const QString &scoreSensor = attr.value(QString("ScoreSensor"));
         if (!scoreSensor.isNull())

@@ -369,12 +369,11 @@ private:
 
 #define NLINESENSORELEMENTS 7
 #define LINESENSORELDIST 0.08
-#define LINETRUEPROB 0.98
 
 class cbLineSensor : public cbSensor
 {
 public: // static data members
-    static double noise;
+    static double lineTrueProb;
 
 public:
 	cbLineSensor(cbRobot *rob, QString sId);

@@ -479,7 +479,7 @@ cbLineSensor::~cbLineSensor()
 void cbLineSensor::update(vector<bool> inside)
 {
 	for(int i=0; i<NLINESENSORELEMENTS;i++) {
-		if (randUniform(0.0, 1.0)< LINETRUEPROB) {
+		if (randUniform(0.0, 1.0) < lineTrueProb) {
 			value[i]=inside[i];
 		}
 		else value[i]=!inside[i];

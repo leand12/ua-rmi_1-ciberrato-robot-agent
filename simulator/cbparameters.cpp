@@ -50,6 +50,7 @@ cbParameters::cbParameters()
     obstacleNoise         = cbIRSensor::noise;
     gpsLinNoise           = cbGPSSensor::noiseLin;
     gpsDirNoise           = cbGPSSensor::noiseAng;
+    lineSensorTrueProb    = cbLineSensor::lineTrueProb;
 
 	//Requests
 	nReqPerCycle=4;

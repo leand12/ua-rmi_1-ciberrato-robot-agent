@@ -1498,6 +1498,7 @@ void cbSimulator::processEditParameters(void)
 	cbIRSensor::noise      = param->obstacleNoise;
 	cbGPSSensor::noiseLin      = param->gpsLinNoise;
 	cbGPSSensor::noiseAng      = param->gpsDirNoise;
+	cbLineSensor::lineTrueProb = param->lineSensorTrueProb;
 
 	//Requests
 	cbRobot::maxSensorsRequested = param->nReqPerCycle;
