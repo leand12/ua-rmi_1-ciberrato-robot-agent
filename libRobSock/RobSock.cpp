@@ -69,7 +69,9 @@ int InitRobotBeacon(char *rob_name, int rob_id, double height, char *host)
 int ReadSensors(void)
 {
     assert(robLink!=0);
-    return robLink->ReadSensors();
+    int n = robLink->ReadSensors();
+    if (n<=0) exit(1); // error or timeout 
+    return n;
 }
 
 /* Time */

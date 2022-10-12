@@ -57,6 +57,8 @@ class Port {
 		int		recv_info(void *buf, int bufSize) ;
 		sockaddr_in     GetLastSender(void);
 		void            SetRemote(sockaddr_in rem_addr);
+		bool            SetRcvTimeout(int sec, int usec);
+
 
 		int		socketfd ;			/* socket discriptor */
         private:

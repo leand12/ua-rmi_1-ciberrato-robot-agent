@@ -143,6 +143,8 @@ CRobLink::CRobLink(char *rob_name, int rob_id, char *host) : measures(0), port(6
 		return;
     }
 
+    port.SetRcvTimeout(2,0);
+
     send_register_message(rob_name, rob_id);
     if( Status != 0 ) return;
 

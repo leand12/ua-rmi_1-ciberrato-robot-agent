@@ -504,6 +504,7 @@ public class ciberIF {
         // Get a datagram socket
 	try {
                 socket = new DatagramSocket();
+				socket.setSoTimeout(2000);
 	}
 	catch(Exception e) {
 	        e.printStackTrace();
@@ -572,6 +573,9 @@ public class ciberIF {
 	// read socket
 	try {
             socket.receive(packet);
+	}
+	catch(SocketTimeoutException e) {
+		System.exit(1);
 	}
 	catch(Exception e) {
 		e.printStackTrace();

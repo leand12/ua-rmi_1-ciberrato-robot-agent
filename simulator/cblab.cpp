@@ -94,15 +94,24 @@ void cbLab::addWall(cbWall *wall)
 
 /*!
 	Determine and return minimum distance from given
-	point to any wall in lab
+	point to any wall above 0.0 height in lab
 */
 double cbLab::wallDistance(cbPoint &p)
+{
+	return wallDistanceAboveHeight(p, 0.0);
+}
+
+/*!
+	Determine and return minimum distance from given
+	point to any wall in lab above given height
+*/
+double cbLab::wallDistanceAboveHeight(cbPoint &p, double height)
 {
 	double min = width+height;	// this is an upper bound
 //	for (unsigned int i=0; i<walls.size(); i++)
 	for (unsigned int i=0; i<walls.size(); i++)
 	{
-		if(walls[i]->Height() <= 0.0) continue;
+		if(walls[i]->Height() <= height) continue;
 
 		double dist = walls[i]->distance(p);
 		//cout.form("walls[%u]->distance(%g,%g) = %g\n", i, p.x, p.y, dist);
@@ -110,6 +119,7 @@ double cbLab::wallDistance(cbPoint &p)
 	}
 	return min;
 }
+
 
 /*!
 	Determine and return if point is inside wall

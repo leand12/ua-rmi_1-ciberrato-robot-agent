@@ -58,6 +58,7 @@ public:
 
 	double wallDistance(cbPoint &);
     double wallDistance(cbPoint &, double);
+    double wallDistanceAboveHeight(cbPoint &p, double height);
     double wallDistanceAboveHeight(cbPoint &p, double dir, double height);
 	double cornerDistance(cbPoint &, double, double);
 

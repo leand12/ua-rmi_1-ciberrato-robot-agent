@@ -973,6 +973,11 @@ void cbSimulator::UpdateScores()
           case 4:
             robot->updateScoreLineControl2022(); // LINE CONTROL
             break;
+          case 5:
+          case 6:
+            robot->updateScoreLineMappingPlanning2022(); // LINE MAPPING PLANNING
+            break;
+
           default:
            robot->updateScoreCompetitive();      // COMPETITIVE
            //robot->updateScore();               // COOPERATIVE

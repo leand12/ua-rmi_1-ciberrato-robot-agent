@@ -145,6 +145,8 @@ public:
 	void updateScoreCompetitive();
 	void updateScoreControl();
 	void updateScoreLineControl2022();
+    void updateScoreLineMappingPlanning2022();
+
 
 	void updateState();
 	void updateStateCompetitive();
