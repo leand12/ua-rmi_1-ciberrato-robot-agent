@@ -215,13 +215,15 @@ int CRLab::setWidth( float width )
 
 int CRLab::setName( const char *name )
 {
-	strcpy(labname, name);
+	strncpy(labname, name, MAXLABNAME-1);
+	labname[MAXLABNAME-1]='\0';
 	return(0);
 }
 
 int CRLab::setUnits( char *units )
 {
-	strcpy(labunits, units);
+	strncpy(labunits, units, MAXLABNAME-1);
+	labunits[MAXLABNAME-1]='\0';
 	return(0);
 }
 

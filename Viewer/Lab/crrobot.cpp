@@ -43,7 +43,8 @@ CRRobot::~CRRobot( void )
 
 void CRRobot::setName( const char *name )
 {
-	strcpy(robotName, name);
+	strncpy(robotName, name, MAXROBOTNAME-1);
+	robotName[MAXROBOTNAME-1]='\0';
 }
 
 char* CRRobot::name( void )
@@ -83,7 +84,8 @@ void CRRobot::setCollisions( unsigned value )
 
 void CRRobot::setCollision( const char *collision )
 {
-	strcpy(robotCollision, collision);
+	strncpy(robotCollision, collision,7);
+	robotCollision[7]='\0';
 }
 
 unsigned CRRobot::collisions( void )
