@@ -76,7 +76,7 @@ class Mapper:
 prev_x = prev_y = prev_a = None
 is_rotating_to =  None
 prev_measures = [0.5]*7
-has_plan = 0
+has_plan = False
 prev_rPow = 0
 prev_lPow = 0
 moves = 0
@@ -164,22 +164,18 @@ class MyRob(CRobLinkAngs):
     
             x, y, a = round(self.measures.x), round(self.measures.y), round((self.measures.compass + 360) / 90) % 4
 
-            print((self.measures.compass + 360) / 90 % 4)
+            # print((self.measures.compass + 360) / 90 % 4)
             
             a_err = abs((self.measures.compass + 360) / 90 % 4 - a)
 
-            lPow = rPow = 0.1
+            lPow = rPow = 0.125
             
-            
-            # Before rotating ensure that the robot is centered in the line
-            if measures[0] or measures[-1]:
-                lPow = -0.05
-                rPow = -0.05
             # Rotate robot on an intersection
-            elif is_rotating_to:
+            if is_rotating_to:
                 print(self.measures.compass, a, ' has to go to ', is_rotating_to, '   err', a_err)
-                if a == is_rotating_to and a_err < 0.1:
+                if a == is_rotating_to and a_err < 0.05:
                     is_rotating_to = None
+                    moves = 0
                 elif a == is_rotating_to:
                     lPow = 0.05 if prev_lPow > 0 else -0.05
                     rPow = 0.05 if prev_rPow > 0 else -0.05
@@ -201,8 +197,8 @@ class MyRob(CRobLinkAngs):
                 has_plan = False
 
             # Make robot visit intersection
-            #if all(measures[:3]) or all(measures[:4]):
-            if measures[0] or measures[-1]:
+            # if all(measures[:3]) or all(measures[:4]):
+            if (measures[0] or measures[-1]) and moves + 1 == 15: # FIXME: noise
                 dir = self.map.explore_inter(x, y, a, measures)
                 print(dir)
                 if not has_plan:
@@ -212,10 +208,7 @@ class MyRob(CRobLinkAngs):
                         is_rotating_to = (a + 3) % 4
                     has_plan = True
                 else:
-                    lPow, rPow = self.follow_line()
-            else:
-                lPow, rPow = self.follow_line()
-
+                    moves = -1
             
             self.driveMotors(lPow, rPow)
             print([f"{i:4.2f}" for i in measures])
@@ -223,6 +216,7 @@ class MyRob(CRobLinkAngs):
             prev_x, prev_y = x, y
             prev_rPow, prev_lPow = rPow, lPow
             prev_measures = measures
+            moves += 1
 
     
     def follow_line(self) -> tuple[float, float]:
