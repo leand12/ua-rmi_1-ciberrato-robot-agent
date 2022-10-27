@@ -2,6 +2,7 @@ from enum import Enum
 from operator import is_
 from statistics import mean
 import sys
+from tkinter import RIGHT
 from croblink import *
 from math import *
 import xml.etree.ElementTree as ET
@@ -10,11 +11,23 @@ CELLROWS = 7
 CELLCOLS = 14
 
 
-class Direction(Enum):
-    NORTH = 0
+
+class Rotation(Enum):
+    LEFT = 0
     RIGHT = 1
-    SOUTH = 2
-    LEFT = 3
+
+
+class Direction(int, Enum):
+    EAST = (0, 0)
+    NORTH = (1, 90)
+    WEST = (2, 180)
+    SOUTH = (3, -90)
+
+    def __new__(cls, value, angle):
+        obj = int.__new__(cls)
+        obj._value_ = value
+        obj.angle = angle
+        return obj
 
 
 class Mapper:
@@ -59,7 +72,7 @@ class Mapper:
             if self.labMap[py][px] == ' ':
                 self.labMap[py][px] = "*"
             if self.labMap[py][px] == '*':
-                return Direction.LEFT
+                return Rotation.LEFT
 
         if line[-1]:       
         #if all(line[4:]):        # right
@@ -67,14 +80,14 @@ class Mapper:
             if self.labMap[py][px] == ' ':
                 self.labMap[py][px] = "*"
             if self.labMap[py][px] == '*':
-                return Direction.RIGHT
+                return Rotation.RIGHT
                 
         
             # if
             #   find_next()
 
 prev_x = prev_y = prev_a = None
-is_rotating_to =  None
+is_rotating_to: Direction =  None
 prev_measures = [0.5]*7
 has_plan = False
 prev_rPow = 0
@@ -171,20 +184,17 @@ class MyRob(CRobLinkAngs):
             lPow = rPow = 0.125
             
             # Rotate robot on an intersection
-            if is_rotating_to:
+            if is_rotating_to != None:
+                print("\n"*4)
                 print(self.measures.compass, a, ' has to go to ', is_rotating_to, '   err', a_err)
-                if a == is_rotating_to and a_err < 0.05:
+                lPow, rPow = self.rotate(self.measures.compass, is_rotating_to.angle)
+                print(prev_lPow, prev_rPow)
+                print(lPow, rPow)
+                
+                if abs(lPow) < 0.0005:
                     is_rotating_to = None
                     moves = 0
-                elif a == is_rotating_to:
-                    lPow = 0.05 if prev_lPow > 0 else -0.05
-                    rPow = 0.05 if prev_rPow > 0 else -0.05
-                if (a + 1) % 4 == is_rotating_to:
-                    lPow = -0.15
-                    rPow = 0.15
-                elif (a + 3) % 4 ==  is_rotating_to:
-                    lPow = 0.15        
-                    rPow = -0.15
+
                 prev_lPow = lPow
                 prev_rPow = rPow
                 self.driveMotors(lPow, rPow)
@@ -202,10 +212,11 @@ class MyRob(CRobLinkAngs):
                 dir = self.map.explore_inter(x, y, a, measures)
                 print(dir)
                 if not has_plan:
-                    if dir == Direction.LEFT:
-                        is_rotating_to = (a + 1) % 4
-                    if dir == Direction.RIGHT:
-                        is_rotating_to = (a + 3) % 4
+                    if dir == Rotation.LEFT:
+                        is_rotating_to = Direction( (a + 1) % 4 )
+                    if dir == Rotation.RIGHT:
+                        is_rotating_to = Direction( (a + 3) % 4 )
+                    print(is_rotating_to)
                     has_plan = True
                 else:
                     moves = -1
@@ -220,7 +231,7 @@ class MyRob(CRobLinkAngs):
 
     
     def follow_line(self) -> tuple[float, float]:
-        """
+        """ 
         Helps the robot staying on top of the line. 
         """
         global prev_measures
@@ -241,6 +252,24 @@ class MyRob(CRobLinkAngs):
             lPow += s*(i-3)*measures[i]
         return lPow, rPow
 
+    def rotate(self, angle_from: float, angle_to: float) -> tuple[float, float]:
+        """
+        Returns the values needed to reach the desired rotation.
+        """
+
+        rad_to = angle_to * pi / 180
+        rad_from = angle_from * pi / 180
+
+        a = angle_to - angle_from
+        a += -360 if a > 180 else 360 if a < -180 else 0
+
+        pwr = min(0.3, abs(a * pi / 180))
+
+        if sin(rad_from - rad_to) > 0:
+            # rotate to right
+            pwr *= -1
+
+        return -pwr/2, pwr/2
 
 class Map():
     def __init__(self, filename):
