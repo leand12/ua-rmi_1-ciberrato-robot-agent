@@ -6,6 +6,7 @@ from tkinter import RIGHT
 from croblink import *
 from math import *
 import xml.etree.ElementTree as ET
+from typing import Tuple, List
 
 CELLROWS = 7
 CELLCOLS = 14
@@ -33,7 +34,7 @@ class Direction(int, Enum):
 class Mapper:
     size = (49, 21)
 
-    def __init__(self, start: tuple[int, int]) -> 'Mapper':
+    def __init__(self, start: Tuple[int, int]) -> 'Mapper':
         self.start = start
         self.labMap = [[' ']*self.size[0] for _ in range(self.size[1])]
 
@@ -50,7 +51,7 @@ class Mapper:
         dir = ['-', '|'][round(angle / 90) % 2]
         self.labMap[y][x] = dir
 
-    def explore_inter(self, x: int, y: int, angle: float, line: list[int]) -> None:
+    def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
         print('explore_inter', x, y)
@@ -86,17 +87,21 @@ class Mapper:
             # if
             #   find_next()
 
-prev_x = prev_y = prev_a = None
-is_rotating_to: Direction =  None
-prev_measures = [0.5]*7
-has_plan = False
-prev_rPow = 0
-prev_lPow = 0
-moves = 0
+
 
 class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
         CRobLinkAngs.__init__(self, rob_name, rob_id, angles, host)
+        self.prev_measures = [0.5]*7
+        self.prev_x = self.prev_y = self.prev_a = None
+        self.prev_rPow = 0
+        self.prev_lPow = 0
+
+        self.is_rotating_to: Direction =  None
+        self.goal = None
+        
+        self.has_plan = False
+
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
@@ -154,7 +159,11 @@ class MyRob(CRobLinkAngs):
                 self.wander()
 
     def wander(self):
-        global prev_x, prev_y, prev_a, is_rotating_to, has_plan, prev_lPow, prev_rPow, prev_measures, moves
+        self.goal = 860, 404.4
+        lPow, rPow = self.move_to()
+        print(self.measures.x, self.measures.y, '    ', lPow, rPow, end='   ')
+        self.driveMotors(lPow, rPow)
+        return
         
         center_id = 0
         left_id = 1
@@ -184,62 +193,59 @@ class MyRob(CRobLinkAngs):
             lPow = rPow = 0.125
             
             # Rotate robot on an intersection
-            if is_rotating_to != None:
+            if self.is_rotating_to != None:
                 print("\n"*4)
-                print(self.measures.compass, a, ' has to go to ', is_rotating_to, '   err', a_err)
-                lPow, rPow = self.rotate(self.measures.compass, is_rotating_to.angle)
-                print(prev_lPow, prev_rPow)
+                print(self.measures.compass, a, ' has to go to ', self.is_rotating_to, '   err', a_err)
+                lPow, rPow = self.rotate(self.measures.compass, self.is_rotating_to.angle)
+                print(self.prev_lPow, self.prev_rPow)
                 print(lPow, rPow)
                 
                 if abs(lPow) < 0.0005:
-                    is_rotating_to = None
-                    moves = 0
+                    self.is_rotating_to = None
+                    self.goal = None
+                    self.moves = 0
 
-                prev_lPow = lPow
-                prev_rPow = rPow
+                self.prev_lPow = lPow
+                self.prev_rPow = rPow
                 self.driveMotors(lPow, rPow)
                 return
 
             
             # Make robot visit next position and paint map
-            if prev_x and prev_x != x or prev_y != y:
+            if self.prev_x and self.prev_x != x or self.prev_y != y:
                 self.map.visit(x, y, self.measures.compass)
-                has_plan = False
+                self.has_plan = False
 
             # Make robot visit intersection
             # if all(measures[:3]) or all(measures[:4]):
-            if (measures[0] or measures[-1]) and moves + 1 == 15: # FIXME: noise
+            if (measures[0] or measures[-1]): # FIXME: noise
                 dir = self.map.explore_inter(x, y, a, measures)
                 print(dir)
-                if not has_plan:
+                self.goal = round(self.measures.x), round(self.measures.y)
+                if not self.has_plan:
                     if dir == Rotation.LEFT:
-                        is_rotating_to = Direction( (a + 1) % 4 )
+                        self.is_rotating_to = Direction( (a + 1) % 4 )
                     if dir == Rotation.RIGHT:
-                        is_rotating_to = Direction( (a + 3) % 4 )
-                    print(is_rotating_to)
-                    has_plan = True
-                else:
-                    moves = -1
+                        self.is_rotating_to = Direction( (a + 3) % 4 )
+                    print(self.is_rotating_to)
+                    self.has_plan = True
             
             self.driveMotors(lPow, rPow)
             print([f"{i:4.2f}" for i in measures])
     
-            prev_x, prev_y = x, y
-            prev_rPow, prev_lPow = rPow, lPow
-            prev_measures = measures
-            moves += 1
-
+            self.prev_x, self.prev_y = x, y
+            self.prev_rPow, self.prev_lPow = rPow, lPow
+            self.prev_measures = measures
     
-    def follow_line(self) -> tuple[float, float]:
-        """ 
-        Helps the robot staying on top of the line. 
-        """
-        global prev_measures
+
+
+    def follow_line(self) -> Tuple[float, float]:
+        """Helps the robot staying on top of the line."""
 
         print("follow line")        
         measures = [int(i) for i in self.measures.lineSensor]
-        measures = [(prev_measures[i]*0.3 + measures[i]*0.7)/2 for i in range(7)]
-        prev_measures = measures
+        measures = [(self.prev_measures[i]*0.3 + measures[i]*0.7)/2 for i in range(7)]
+        self.prev_measures = measures
 
         lPow = rPow = 0.1
         # s = 0.25
@@ -252,11 +258,12 @@ class MyRob(CRobLinkAngs):
             lPow += s*(i-3)*measures[i]
         return lPow, rPow
 
-    def rotate(self, angle_from: float, angle_to: float) -> tuple[float, float]:
+    def rotate(self, angle_from: float, angle_to: float) -> Tuple[float, float]:
         """
         Returns the values needed to reach the desired rotation.
         """
-
+        # TODO: ter em consideraçao os valores do power anterior de maneira a roda perfeito
+        
         rad_to = angle_to * pi / 180
         rad_from = angle_from * pi / 180
 
@@ -270,6 +277,19 @@ class MyRob(CRobLinkAngs):
             pwr *= -1
 
         return -pwr/2, pwr/2
+
+    def move_to(self) -> Tuple[float, float]:
+        
+        x2, y2 = self.goal
+        x1, y1 = self.measures.x, self.measures.y
+
+        a1 = atan2(y2 - y1, x2 - x1)
+        a2 = self.measures.compass * pi / 180
+
+        a0 = a1 - a2
+        print(a0)
+
+        return 0.15 * (cos(a0) - sin(a0)), 0.15 * (cos(a0) + sin(a0))
 
 class Map():
     def __init__(self, filename):
