@@ -100,7 +100,8 @@ class MyRob(CRobLinkAngs):
         self.action = "moving"
 
         self.is_rotating_to: Direction =  None
-        self.goal = None
+        self.goal = 846.2, 404.4
+        
         
         self.has_plan = False
 
@@ -161,25 +162,7 @@ class MyRob(CRobLinkAngs):
                 self.wander()
 
     def wander(self):
-        self.goal = 846, 404.4
-
-        if self.action == 'rotating':
-            # Rotates the robot
-            self.rotate()
-            self.has_plan = False
-
-        elif self.action == 'moving':
-            # Move to goal
-            lPow, rPow = self.move_to()
-            print(self.measures.lineSensor)
-            if lPow == 0 and rPow == 0:
-                print(self.measures.lineSensor, 'done')
-                self.action = None
         
-        else:
-            pass
-
-
         measures = [int(i) for i in self.measures.lineSensor]
         x, y, a = round(self.measures.x), round(self.measures.y), round((self.measures.compass + 360) / 90) % 4
 
@@ -196,7 +179,46 @@ class MyRob(CRobLinkAngs):
                     self.is_rotating_to = Direction( (a + 3) % 4 )
                 self.has_plan = True
         
+        # Make robot visit next position and paint map
+        if self.prev_x and self.prev_x != x or self.prev_y != y:
+            self.map.visit(x, y, self.measures.compass)
+            self.has_plan = False
+            # self.has_plan = False
 
+        if self.action == 'rotating':
+            # Rotates the robot
+            lPow, rPow = self.rotate()
+            if abs(lPow) < 0.001 and abs(rPow) < 0.001:
+                self.action = 'moving'
+                self.is_rotating_to = None
+
+
+        elif self.action == 'moving':
+            # Move to goal
+            lPow, rPow = self.move_to()
+            print(self.measures.lineSensor)
+            if lPow == 0 and rPow == 0:
+                print(self.measures.lineSensor, 'done')
+                if self.is_rotating_to != None:
+                    self.action = "rotating"
+                    print(self.is_rotating_to)
+                    if self.is_rotating_to.value == Direction.EAST.value:
+                        self.goal = self.measures.x + 2, self.measures.y
+                    elif self.is_rotating_to.value == Direction.WEST.value:
+                        self.goal = self.measures.x - 2, self.measures.y
+                    elif self.is_rotating_to.value == Direction.NORTH.value:
+                        self.goal = self.measures.x, self.measures.y + 2
+                    elif self.is_rotating_to.value == Direction.SOUTH.value:
+                        self.goal = self.measures.x, self.measures.y - 2
+
+                else:
+                    # TODO: get next goal
+                    pass
+        
+
+
+        self.prev_x = x
+        self.prev_y = y
 
         print("{:7.1f} {:7.1f}      {:6.2f} {:6.2f} ".format( self.measures.x, self.measures.y, lPow, rPow), end='   ')
         self.driveMotors(lPow, rPow)
@@ -327,7 +349,6 @@ class MyRob(CRobLinkAngs):
         print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
         if x2 == x1 and y1 == y2:
-            self.goal = None
             return 0, 0
 
 
