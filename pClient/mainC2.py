@@ -97,6 +97,8 @@ class MyRob(CRobLinkAngs):
         self.prev_rPow = 0
         self.prev_lPow = 0
 
+        self.action = "moving"
+
         self.is_rotating_to: Direction =  None
         self.goal = None
         
@@ -159,9 +161,44 @@ class MyRob(CRobLinkAngs):
                 self.wander()
 
     def wander(self):
-        self.goal = 860, 404.4
-        lPow, rPow = self.move_to()
-        print(self.measures.x, self.measures.y, '    ', lPow, rPow, end='   ')
+        self.goal = 846, 404.4
+
+        if self.action == 'rotating':
+            # Rotates the robot
+            self.rotate()
+            self.has_plan = False
+
+        elif self.action == 'moving':
+            # Move to goal
+            lPow, rPow = self.move_to()
+            print(self.measures.lineSensor)
+            if lPow == 0 and rPow == 0:
+                print(self.measures.lineSensor, 'done')
+                self.action = None
+        
+        else:
+            pass
+
+
+        measures = [int(i) for i in self.measures.lineSensor]
+        x, y, a = round(self.measures.x), round(self.measures.y), round((self.measures.compass + 360) / 90) % 4
+
+        # Make robot visit intersection
+        # if all(measures[:3]) or all(measures[:4]):
+        if (measures[0] or measures[-1]): # FIXME: noise
+            dir = self.map.explore_inter(x, y, a, measures)
+            print(dir)
+            # self.goal = round(self.measures.x), round(self.measures.y)
+            if not self.has_plan:
+                if dir == Rotation.LEFT:
+                    self.is_rotating_to = Direction( (a + 1) % 4 )
+                if dir == Rotation.RIGHT:
+                    self.is_rotating_to = Direction( (a + 3) % 4 )
+                self.has_plan = True
+        
+
+
+        print("{:7.1f} {:7.1f}      {:6.2f} {:6.2f} ".format( self.measures.x, self.measures.y, lPow, rPow), end='   ')
         self.driveMotors(lPow, rPow)
         return
         
@@ -196,7 +233,7 @@ class MyRob(CRobLinkAngs):
             if self.is_rotating_to != None:
                 print("\n"*4)
                 print(self.measures.compass, a, ' has to go to ', self.is_rotating_to, '   err', a_err)
-                lPow, rPow = self.rotate(self.measures.compass, self.is_rotating_to.angle)
+                lPow, rPow = self.rotate(self.is_rotating_to.angle)
                 print(self.prev_lPow, self.prev_rPow)
                 print(lPow, rPow)
                 
@@ -258,12 +295,16 @@ class MyRob(CRobLinkAngs):
             lPow += s*(i-3)*measures[i]
         return lPow, rPow
 
-    def rotate(self, angle_from: float, angle_to: float) -> Tuple[float, float]:
+    def rotate(self) -> Tuple[float, float]:
         """
         Returns the values needed to reach the desired rotation.
         """
         # TODO: ter em consideraçao os valores do power anterior de maneira a roda perfeito
-        
+        angle_to = self.is_rotating_to.angle
+        angle_from = self.measures.compass
+
+        print(f"rotating from {angle_from:5.1f} to {angle_to:5.1f}")
+
         rad_to = angle_to * pi / 180
         rad_from = angle_from * pi / 180
 
@@ -282,12 +323,19 @@ class MyRob(CRobLinkAngs):
         
         x2, y2 = self.goal
         x1, y1 = self.measures.x, self.measures.y
+        
+        print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
+
+        if x2 == x1 and y1 == y2:
+            self.goal = None
+            return 0, 0
+
 
         a1 = atan2(y2 - y1, x2 - x1)
         a2 = self.measures.compass * pi / 180
 
         a0 = a1 - a2
-        print(a0)
+        # print(f'a0={a0:6.2f}  cos(a0)={cos(a0):5.2f}  sin(a0)={sin(a0):5.2f}')
 
         return 0.15 * (cos(a0) - sin(a0)), 0.15 * (cos(a0) + sin(a0))
 
