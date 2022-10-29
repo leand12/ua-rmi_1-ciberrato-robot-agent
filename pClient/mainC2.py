@@ -39,9 +39,9 @@ class Mapper:
         self.labMap = [[' ']*self.size[0] for _ in range(self.size[1])]
 
     def print_map(self) -> None:
-        print('\n' * 5)
         for row in reversed(self.labMap):
             print(''.join(row).replace(' ', '.'))
+        print('\n' * 2)
 
     def visit(self, x: int, y: int, angle: float) -> None:
         x = round(x - self.start[0]) + int(self.size[0] / 2)
@@ -49,9 +49,11 @@ class Mapper:
         print('visit', x, y)
 
         dir = ['-', '|'][round(angle / 90) % 2]
-        self.labMap[y][x] = dir
+        if self.labMap[y][x] != 'x':
+            self.labMap[y][x] = dir
+        
 
-    def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
+    def explore_inter(self, x: int, y: int, angle: float, line: List[int], action: str) -> None:
         print('explore_inter', x, y, line)
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
@@ -86,6 +88,11 @@ class Mapper:
             elif self.labMap[py][px] == '*':
                 return Rotation.RIGHT
         
+        if action == "rotating" and line[3]:
+            print("a fazer esta merda, doubt")
+            py, px = d[0][0], d[0][1]
+            if self.labMap[py][px] == '.':
+                self.labMap[py][px] = "*"
         # if
             #   find_next()
 
@@ -105,9 +112,8 @@ class MyRob(CRobLinkAngs):
         self.action = "moving"
 
         self.is_rotating_to: Direction =  None
-        self.goal = 846.2, 404.4
         
-        self.prev_out = None
+        self.prev_out = (0, 0)
 
         self.has_plan = False
 
@@ -130,8 +136,9 @@ class MyRob(CRobLinkAngs):
         stopped_state = 'run'
 
         self.readSensors()
-        print(self.measures.x, self.measures.y)
-        self.map = Mapper((self.measures.x, self.measures.y))
+        self.goal = (self.measures.x, self.measures.y)
+        print(self.goal)
+        self.map = Mapper(self.goal)
 
         while True:
             self.readSensors()
@@ -171,25 +178,8 @@ class MyRob(CRobLinkAngs):
         
         measures = [int(i) for i in self.measures.lineSensor]
         x, y, a = round(self.measures.x), round(self.measures.y), round((self.measures.compass + 360) / 90) % 4
-
-        # Make robot visit intersection
-        # if all(measures[:3]) or all(measures[:4]):
-        if (all(measures[:3]) or all(measures[4:])) and self.action != "rotating": # FIXME: noise
-            dir = self.map.explore_inter(self.measures.x, self.measures.y, a, measures)
-            #print(dir)
-            # self.goal = round(self.measures.x), round(self.measures.y)
-            if not self.has_plan:
-                if dir == Rotation.LEFT:
-                    self.is_rotating_to = Direction( (a + 1) % 4 )
-                if dir == Rotation.RIGHT:
-                    self.is_rotating_to = Direction( (a + 3) % 4 )
-                self.has_plan = True
         
-        # Make robot visit next position and paint map
-        if self.prev_x and self.prev_x != x or self.prev_y != y:
-            self.map.visit(self.measures.x, self.measures.y, self.measures.compass)
-            self.has_plan = False
-            # self.has_plan = False
+        print('\n', self.action, self.measures.x, self.measures.y, self.prev_out)
 
         if self.action == 'rotating':
             # Rotates the robot
@@ -198,37 +188,62 @@ class MyRob(CRobLinkAngs):
                 self.action = 'moving'
                 self.is_rotating_to = None
 
-
         elif self.action == 'moving':
             # Move to goal
             lPow, rPow = self.move_to()
+
             #print(self.measures.lineSensor)
-            if lPow == 0 and rPow == 0:
+            if self.action == 'stop':
                 #print(self.measures.lineSensor, 'done')
+                
                 if self.is_rotating_to != None:
                     self.action = "rotating"
-                    #print(self.is_rotating_to)
-                    if self.is_rotating_to.value == Direction.EAST.value:
-                        self.goal = self.measures.x + 2, self.measures.y
-                    elif self.is_rotating_to.value == Direction.WEST.value:
-                        self.goal = self.measures.x - 2, self.measures.y
-                    elif self.is_rotating_to.value == Direction.NORTH.value:
-                        self.goal = self.measures.x, self.measures.y + 2
-                    elif self.is_rotating_to.value == Direction.SOUTH.value:
-                        self.goal = self.measures.x, self.measures.y - 2
-
+                    dir = self.is_rotating_to
                 else:
-                    # TODO: get next goal
-                    pass
+                    print("lixo")
+                    self.action = 'moving'
+                    dir = Direction(a)
+                
+                #print(self.is_rotating_to)
+                if dir.value == Direction.EAST.value:
+                    self.goal = self.goal[0] + 2, self.goal[1]
+                elif dir.value == Direction.WEST.value:
+                    self.goal = self.goal[0] - 2, self.goal[1]
+                elif dir.value == Direction.NORTH.value:
+                    self.goal = self.goal[0], self.goal[1] + 2
+                elif dir.value == Direction.SOUTH.value:
+                    self.goal = self.goal[0], self.goal[1] - 2
+
+            # Make robot visit intersection
+            # if all(measures[:3]) or all(measures[:4]):
+            print(measures)
+            if (all(measures[:3]) or all(measures[4:])): # FIXME: noise
+                dir = self.map.explore_inter(self.measures.x, self.measures.y, a, measures, self.action)
+
+                # self.goal = round(self.measures.x), round(self.measures.y)
+                if not self.has_plan:
+                    if dir == Rotation.LEFT:
+                        self.is_rotating_to = Direction( (a + 1) % 4 )
+                    elif dir == Rotation.RIGHT:
+                        self.is_rotating_to = Direction( (a + 3) % 4 )
+                    self.has_plan = True
+            
+            # Make robot visit next position and paint map
+            if self.prev_x and self.prev_x != x or self.prev_y != y:
+                self.map.visit(self.measures.x, self.measures.y, self.measures.compass)
+                self.has_plan = False
         
+        elif self.action == 'dead_end??':
+            # go to nearest *
+            ...
 
 
-        self.prev_x = x
-        self.prev_y = y
+        self.prev_x = self.measures.x
+        self.prev_y = self.measures.y
         if not self.prev_out:
             self.prev_out = lPow, rPow
         else:
-            self.prev_out = (lPow + self.prev_out[0] / 2), (rPow + self.prev_out[1] / 2)
+            self.prev_out = (lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
         # print("{:7.1f} {:7.1f}      {:6.2f} {:6.2f} ".format( self.measures.x, self.measures.y, lPow, rPow), end='   ')
         self.driveMotors(lPow, rPow)
         return
@@ -348,10 +363,10 @@ class MyRob(CRobLinkAngs):
         if sin(rad_from - rad_to) < 0:
             # rotate to left
             pwr = min((-0.15 + self.prev_out[0]) / 2, a * pi / 180)
-        elif sin(rad_from - rad_to) > 0:
+        elif sin(rad_from - rad_to) > 0: # TODO: e qnd dá 0
             # rotate to right
             pwr = min(abs((0.15 + self.prev_out[0]) / 2), abs(a * pi / 180))
-       
+
         return pwr/2, -pwr/2
 
     def move_to(self) -> Tuple[float, float]:
@@ -362,8 +377,8 @@ class MyRob(CRobLinkAngs):
         print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
         if x2 == x1 and y1 == y2:
-            return 0, 0
-
+            self.action = 'stop'
+            return tuple(-a for a in self.prev_out)
 
         a1 = atan2(y2 - y1, x2 - x1)
         a2 = self.measures.compass * pi / 180
