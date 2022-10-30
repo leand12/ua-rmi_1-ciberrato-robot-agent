@@ -11,6 +11,17 @@ from typing import Tuple, List
 CELLROWS = 7
 CELLCOLS = 14
 
+class bcolors:
+    PINK = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 class Rotation(Enum):
     LEFT = 0
@@ -280,11 +291,9 @@ class MyRob(CRobLinkAngs):
                     self.is_rotating_to = Direction((a + 3) % 4)
                 elif dir == Rotation.BACK:
                     # TODO: A*
-                    # self.steps = self.search()
-                    # self.action = 'searching'
-                    # self.is_rotating_to = None
-                    # self.goal = None
-                    self.is_rotating_to = Direction((a + 2) % 4)
+                    self.steps = self.search()
+                    self.action = 'searching'
+                    #self.is_rotating_to = Direction((a + 2) % 4)
                 elif dir == Rotation.NONE:
                     self.action = 'moving'
                     self.is_rotating_to = Direction(a)
@@ -303,11 +312,11 @@ class MyRob(CRobLinkAngs):
                                self.measures.compass)
 
 
-        elif self.action == "searching":
+        elif self.action in ("searching", "search_move", "search_rotate"):
 
-            if self.goal and self.measures.x == self.goal[0] and self.measures.y == self.goal[1]:
+            if self.action == 'search_move' and self.measures.x == self.goal[0] and self.measures.y == self.goal[1]:
                 self.steps.pop(0)
-                self.goal = None
+                self.action = 'searching'
             
             x = round(self.measures.x - self.start[0]) + int(self.map.size[0] / 2)
             y = round(self.measures.y - self.start[1]) + int(self.map.size[1] / 2)
@@ -321,41 +330,41 @@ class MyRob(CRobLinkAngs):
                 (y + dx, x + dy),    # dyl = dxf, dxl = dyf
                 (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
             ]
-            print(self.steps)
+            #print(self.steps)
             if len(self.steps) == 0:
                 self.action = "moving"
                 self.goal = x + dx + self.start[0] - int(self.map.size[0] / 2), y - dy + self.start[1] - int(self.map.size[1] / 2)
                 self.is_rotating_to = Direction(round((self.measures.compass + 360) / 90) % 4)
                 return
+
             nx, ny = self.steps[0]
-            print(a, x ,y, d, self.steps, nx, ny)
-            if self.is_rotating_to == None and self.goal == None:
+            #print(a, x ,y, d, self.steps, nx, ny)
+            if self.action == 'searching':
                 print(a, d, self.steps[0])
-                if (ny,nx) == d[0]:
+                self.action = 'search_rotate'
+                if (ny, nx) == d[0]:
                     # does not rotate
                     x = x + dx + self.start[0] - int(self.map.size[0] / 2)
                     y = y - dy + self.start[1] - int(self.map.size[1] / 2)
                     self.goal = (x, y)
-
-                elif (ny,nx) == d[1]:
+                    self.action = 'search_move'
+                elif (ny, nx) == d[1]:
                     # rotates left
                     self.is_rotating_to = Direction((a + 1) % 4)
-                elif (ny,nx) == d[2]:
+                elif (ny, nx) == d[2]:
                     # rotates right
                     self.is_rotating_to = Direction((a + 3) % 4)
                 else:
                     # rotate back
                     self.is_rotating_to = Direction((a + 2) % 4)
 
-            if self.is_rotating_to != None:
+            if self.action == 'search_rotate':
                 # rotate
                 lPow, rPow = self.rotate()
-                print("wtf", self.measures.compass, self.is_rotating_to.value)
                 if self.measures.compass == self.is_rotating_to.angle:
-                    print("entrei aqui crl" + "\n"*10)
-                    self.is_rotating_to = None
+                    self.action = "searching"
 
-            if self.goal != None:
+            if self.action == 'search_move':
                 lPow, rPow = self.move_to()
 
 
@@ -367,14 +376,14 @@ class MyRob(CRobLinkAngs):
         self.prev_y = self.measures.y
         self.prev_out = (
             lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
-        print("{:6.2f} {:6.2f} ".format(lPow, rPow))
+        #print("{:6.2f} {:6.2f} ".format(lPow, rPow))
         self.driveMotors(lPow, rPow)
         return
 
     def follow_line(self) -> Tuple[float, float]:
         """Helps the robot staying on top of the line."""
 
-        print("follow line")
+        #print("follow line")
         measures = [int(i) for i in self.measures.lineSensor]
         measures = [(self.prev_measures[i]*0.3 +
                      measures[i]*0.7)/2 for i in range(7)]
@@ -395,11 +404,10 @@ class MyRob(CRobLinkAngs):
         """
         Returns the values needed to reach the desired rotation.
         """
-        # TODO: ter em consideraçao os valores do power anterior de maneira a roda perfeito
         angle_to = self.is_rotating_to.angle
         angle_from = self.measures.compass
 
-        print(f"rotating from {angle_from:5.1f} to {angle_to:5.1f}")
+        #print(f"rotating from {angle_from:5.1f} to {angle_to:5.1f}")
 
         rad_to = angle_to * pi / 180
         rad_from = angle_from * pi / 180
@@ -426,7 +434,7 @@ class MyRob(CRobLinkAngs):
         x1, y1 = self.measures.x, self.measures.y
         dist = euclidean((x1, y1), self.goal)
 
-        print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
+        #print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
         if x2 == x1 and y1 == y2:
             self.action = 'stop'
@@ -448,12 +456,12 @@ class MyRob(CRobLinkAngs):
         lPwr = ((2*(n1 - min_) / rng_) - 1) * min(dist, 0.15)
         rPwr = ((2*(n2 - min_) / rng_) - 1) * min(dist, 0.15)
 
-        print('\033[91m', a0, '\033[0m')
-        print('\033[91m', (lPwr, rPwr), '\033[0m')
+        #print('\033[91m', a0, '\033[0m')
+        #print('\033[91m', (lPwr, rPwr), '\033[0m')
         return lPwr, rPwr
 
     def search(self) -> List[Tuple[float, float]]:
-        #     """Finds a new intersection to explore and returns the list of steps to reach it"""
+        """Finds a new intersection to explore and returns the list of steps to reach it"""
 
         min_dist = None
         steps = []
