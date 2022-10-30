@@ -130,11 +130,6 @@ class Mapper:
 
         return Rotation.BACK
 
-    # ........
-    # .I.o.o.o
-    # ........
-    # .o.o.o.o
-    # ........
 
     def save_to_file(self):
         with open('simulator/solution.map', 'w') as fp:
@@ -142,10 +137,10 @@ class Mapper:
                 for x in range(self.size[0]):
                     if y == 10 and x == 24:
                         fp.write('I')
-                    elif y % 2 or x % 2:
+                    elif y % 2 == x % 2:
                         fp.write(' ')
                     else:
-                        fp.write(self.labMap[y][x])
+                        fp.write(self.labMap[y][x].replace('.', ' '))
                 fp.write('\n')
 
 
@@ -188,6 +183,7 @@ class MyRob(CRobLinkAngs):
         self.start = self.goal
         print(self.goal)
         self.map = Mapper(self.goal)
+        self.prev_out = (0, 0)
         self.is_rotating_to = Direction(round(
             (self.measures.compass + 360) / 90) % 4)
 
@@ -235,7 +231,7 @@ class MyRob(CRobLinkAngs):
             (self.measures.compass + 360) / 90) % 4
 
         print('\n', self.action, self.measures.x,
-              self.measures.y, self.prev_out)
+              self.measures.y, self.prev_out, self.measures.compass)
 
         if self.action == 'rotating':
             # Rotates the robot
@@ -244,14 +240,16 @@ class MyRob(CRobLinkAngs):
                 self.action = 'moving'
                 # self.is_rotating_to = None
 
-        elif self.action == 'moving':
+        elif self.action in ('moving', 'stopping'):
 
             # Make robot visit intersection
             # if all(measures[:3]) or all(measures[:4]):
             print(measures)
-            if (all(measures[:3]) or all(measures[4:])):  # FIXME: noise
+            if (all(measures[:3]) or all(measures[4:])) and not self.action == 'stopping':  # FIXME: noise
                 self.map.explore_inter(
-                    self.measures.x + .3*self.is_rotating_to.next[0], self.measures.y + .3*self.is_rotating_to.next[1], a, measures)
+                    self.measures.x + .3*self.is_rotating_to.next[0], 
+                    self.measures.y + .3*self.is_rotating_to.next[1], 
+                    a, measures)
                 print(self.goal, 'stoooooooooooooooooooooop ', end='')
 
                 self.goal = (
@@ -261,6 +259,8 @@ class MyRob(CRobLinkAngs):
                                           self.start[1] + .3*self.is_rotating_to.next[1])
                 )
                 print(self.goal)
+                self.action = 'stopping'
+                print('STOPPING')
 
             # Move to goal
             lPow, rPow = self.move_to()
@@ -268,7 +268,9 @@ class MyRob(CRobLinkAngs):
             # print(self.measures.lineSensor)
             if self.action == 'stop':
                 dir = self.map.make_decision(  # TODO: meter mais
-                    self.measures.x, self.measures.y, a, measures)
+                    self.measures.x, 
+                    self.measures.y, 
+                    a, measures)
 
                 # self.goal = round(self.measures.x), round(self.measures.y)
                 self.action = "rotating"
@@ -278,18 +280,21 @@ class MyRob(CRobLinkAngs):
                     self.is_rotating_to = Direction((a + 3) % 4)
                 elif dir == Rotation.BACK:
                     # TODO: A*
-                    self.steps = self.search()
-                    print(self.steps)
-                    self.action = 'searching'
-                    exit(1)
-                    # self.is_rotating_to = Direction((a + 2) % 4)
+                    #self.steps = self.search()
+                    #print(self.steps)
+                    #self.action = 'searching'
+                    # exit(1)
+                    self.is_rotating_to = Direction((a + 2) % 4)
                 elif dir == Rotation.NONE:
                     self.action = 'moving'
                     self.is_rotating_to = Direction(a)
+                print('STOP')
 
+            if not self.action in ('stopping', 'stop') and euclidean((self.measures.x, self.measures.y), self.goal) < 0.3:
+                print("UPDATE GOAL")
                 self.goal = (
-                    self.goal[0] + 50 * self.is_rotating_to.next[0],
-                    self.goal[1] + 50 * self.is_rotating_to.next[1]
+                    self.goal[0] + 2 * self.is_rotating_to.next[0],
+                    self.goal[1] + 2 * self.is_rotating_to.next[1]
                 )
 
             # Make robot visit next position and paint map
@@ -303,12 +308,9 @@ class MyRob(CRobLinkAngs):
 
         self.prev_x = self.measures.x
         self.prev_y = self.measures.y
-        if not self.prev_out:
-            self.prev_out = lPow, rPow
-        else:
-            self.prev_out = (
-                lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
-        # print("{:7.1f} {:7.1f}      {:6.2f} {:6.2f} ".format( self.measures.x, self.measures.y, lPow, rPow), end='   ')
+        self.prev_out = (
+            lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
+        print("{:6.2f} {:6.2f} ".format(lPow, rPow))
         self.driveMotors(lPow, rPow)
         return
 
@@ -348,15 +350,16 @@ class MyRob(CRobLinkAngs):
         a = angle_to - angle_from
         a += -360 if a > 180 else 360 if a < -180 else 0
 
+        a = a / 180 * pi
+
         if a == 0:
             return 0, 0
 
+        pwr = min(2*abs(a) - abs(self.prev_out[0] - self.prev_out[1]), 0.3)
+
         if sin(rad_from - rad_to) < 0:
-            # rotate to left
-            pwr = min((-0.15 + self.prev_out[0]) / 2, a * pi / 180)
-        elif sin(rad_from - rad_to) > 0:  # TODO: e qnd dá 0
             # rotate to right
-            pwr = min(abs((0.15 + self.prev_out[0]) / 2), abs(a * pi / 180))
+            pwr *= -1
 
         return pwr/2, -pwr/2
 
@@ -473,6 +476,10 @@ class Map():
                             None
 
             i = i+1
+
+
+def euclidean(start, end):
+    return sqrt(abs(start[0] - end[0])**2 + abs(start[1] - end[1])**2)
 
 
 rob_name = "pClient1"
