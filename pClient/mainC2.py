@@ -279,23 +279,81 @@ class MyRob(CRobLinkAngs):
                 elif dir == Rotation.BACK:
                     # TODO: A*
                     self.steps = self.search()
-                    print(self.steps)
                     self.action = 'searching'
-                    exit(1)
+                    self.is_rotating_to = None
+                    self.goal = None
                     # self.is_rotating_to = Direction((a + 2) % 4)
                 elif dir == Rotation.NONE:
                     self.action = 'moving'
                     self.is_rotating_to = Direction(a)
 
-                self.goal = (
-                    self.goal[0] + 50 * self.is_rotating_to.next[0],
-                    self.goal[1] + 50 * self.is_rotating_to.next[1]
-                )
+                if self.is_rotating_to != None:
+                    self.goal = (
+                        self.goal[0] + 50 * self.is_rotating_to.next[0],
+                        self.goal[1] + 50 * self.is_rotating_to.next[1]
+                    )
 
             # Make robot visit next position and paint map
             if self.prev_x and self.prev_x != x or self.prev_y != y:
                 self.map.visit(self.measures.x, self.measures.y,
                                self.measures.compass)
+
+
+        elif self.action == "searching":
+
+            if self.goal and self.measures.x == self.goal[0] and self.measures.y == self.goal[1]:
+                self.steps.pop(0)
+                self.goal = None
+            
+            x = round(self.measures.x - self.start[0]) + int(self.map.size[0] / 2)
+            y = round(self.measures.y - self.start[1]) + int(self.map.size[1] / 2)
+            # check if needs to rotate
+            m = 1 if a < 2 else -1
+            dir = a % 2
+
+            dy, dx = -dir * m, abs(dir - 1) * m
+            d = [
+                (y - dy, x + dx),    # dyf = -1 * dir, dxf = abs(dir - 1)
+                (y + dx, x + dy),    # dyl = dxf, dxl = dyf
+                (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
+            ]
+            print(self.steps)
+            if len(self.steps) == 0:
+                self.action = "moving"
+                self.goal = x + dx + self.start[0] - int(self.map.size[0] / 2), y - dy + self.start[1] - int(self.map.size[1] / 2)
+                self.is_rotating_to = Direction(round((self.measures.compass + 360) / 90) % 4)
+                return
+            nx, ny = self.steps[0]
+            print(a, x ,y, d, self.steps, nx, ny)
+            if self.is_rotating_to == None and self.goal == None:
+                print(a, d, self.steps[0])
+                if (ny,nx) == d[0]:
+                    # does not rotate
+                    x = x + dx + self.start[0] - int(self.map.size[0] / 2)
+                    y = y - dy + self.start[1] - int(self.map.size[1] / 2)
+                    self.goal = (x, y)
+
+                elif (ny,nx) == d[1]:
+                    # rotates left
+                    self.is_rotating_to = Direction((a + 1) % 4)
+                elif (ny,nx) == d[2]:
+                    # rotates right
+                    self.is_rotating_to = Direction((a + 3) % 4)
+                else:
+                    # rotate back
+                    self.is_rotating_to = Direction((a + 2) % 4)
+
+            if self.is_rotating_to != None:
+                # rotate
+                lPow, rPow = self.rotate()
+                print("wtf", self.measures.compass, self.is_rotating_to.value)
+                if self.measures.compass == self.is_rotating_to.angle:
+                    print("entrei aqui crl" + "\n"*10)
+                    self.is_rotating_to = None
+
+            if self.goal != None:
+                lPow, rPow = self.move_to()
+
 
         elif self.action == 'dead_end??':
             # go to nearest *
@@ -388,9 +446,10 @@ class MyRob(CRobLinkAngs):
         min_dist = None
         steps = []
 
-        cx, cy = round(self.measures.x - self.start[0]), round(self.measures.y - self.start[1])
+        cx = round(self.measures.x - self.start[0]) + int(self.map.size[0] / 2)
+        cy = round(self.measures.y - self.start[1]) + int(self.map.size[1] / 2)
 
-        for i, row in enumerate(reversed(self.map.labMap)):
+        for i, row in enumerate(self.map.labMap):
             for j, col in enumerate(row):
                 if col == '*':
                     d, s = self.__a_distance(cx, cy, j, i)
@@ -406,38 +465,41 @@ class MyRob(CRobLinkAngs):
         queue: List[Node] = [Node(position=(cx, cy))]
         visited: List[Node] = [Node(position=(cx, cy))]
 
+        print(cx, cy,gx,gy)
+
         while queue:
             n: Node = queue.pop(0)
             d, x, y = n.distance, *n.position
+            print(d,x,y)
 
             if y == gy and x == gx:
                 final = []
                 while n.parent != None:
                     final.append(n.position)
                     n = n.parent
-                return d, reversed(final)
+                return d, list(reversed(final))
 
             # NORTH
-            if self.map.labMap[y + 1][x] in ("-", "|") and (x, y + 1) not in visited:
+            if self.map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
                 # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
                 visited.append((x, y + 1))
             # SOUTH
-            if self.map.labMap[y - 1][x] in ("-", "|") and (x, y - 1) not in visited:
+            if self.map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
                 # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
                 visited.append((x, y - 1))
             # EAST
-            if self.map.labMap[y][x + 1] in ("-", "|") and (x + 1, y) not in visited:
+            if self.map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
                 # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
                 visited.append((x + 1, y))
             # WEST
-            if self.map.labMap[y][x - 1] in ("-", "|") and (x - 1, y + 1) not in visited:
+            if self.map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
                 # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
                 visited.append((x - 1, y))
-            queue.sort(key=lambda x: x.distance, reverse=True)
+            queue.sort(key=lambda x: x.distance)
 
 
 class Node:
