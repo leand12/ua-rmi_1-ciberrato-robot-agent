@@ -280,11 +280,11 @@ class MyRob(CRobLinkAngs):
                     self.is_rotating_to = Direction((a + 3) % 4)
                 elif dir == Rotation.BACK:
                     # TODO: A*
-                    self.steps = self.search()
-                    self.action = 'searching'
-                    self.is_rotating_to = None
-                    self.goal = None
-                    # self.is_rotating_to = Direction((a + 2) % 4)
+                    # self.steps = self.search()
+                    # self.action = 'searching'
+                    # self.is_rotating_to = None
+                    # self.goal = None
+                    self.is_rotating_to = Direction((a + 2) % 4)
                 elif dir == Rotation.NONE:
                     self.action = 'moving'
                     self.is_rotating_to = Direction(a)
@@ -424,6 +424,7 @@ class MyRob(CRobLinkAngs):
 
         x2, y2 = self.goal
         x1, y1 = self.measures.x, self.measures.y
+        dist = euclidean((x1, y1), self.goal)
 
         print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
@@ -439,8 +440,17 @@ class MyRob(CRobLinkAngs):
 
         c = cos(a0)
         s = sin(a0)
+        n1 = c - s
+        n2 = c + s
+        min_ = min(n1, n2, -1)
+        rng_ = max(n1, n2, 1) - min_
 
-        return 0.15 * (c - s), 0.15 * (c + s)
+        lPwr = ((2*(n1 - min_) / rng_) - 1) * min(dist, 0.15)
+        rPwr = ((2*(n2 - min_) / rng_) - 1) * min(dist, 0.15)
+
+        print('\033[91m', a0, '\033[0m')
+        print('\033[91m', (lPwr, rPwr), '\033[0m')
+        return lPwr, rPwr
 
     def search(self) -> List[Tuple[float, float]]:
         #     """Finds a new intersection to explore and returns the list of steps to reach it"""
