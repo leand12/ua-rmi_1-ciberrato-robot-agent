@@ -16,6 +16,8 @@ CELLCOLS = 14
 class Rotation(Enum):
     LEFT = 0
     RIGHT = 1
+    NONE = 2
+    BACK = 3
 
 
 class Direction(int, Enum):
@@ -36,11 +38,11 @@ class Mapper:
 
     def __init__(self, start: Tuple[int, int]) -> 'Mapper':
         self.start = start
-        self.labMap = [[' ']*self.size[0] for _ in range(self.size[1])]
+        self.labMap = [['.']*self.size[0] for _ in range(self.size[1])]
 
     def print_map(self) -> None:
         for row in reversed(self.labMap):
-            print(''.join(row).replace(' ', '.'))
+            print(''.join(row))
         print('\n' * 2)
 
     def visit(self, x: int, y: int, angle: float) -> None:
@@ -58,47 +60,51 @@ class Mapper:
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
-        m = 1 if angle < 1 else -1
+        print(angle)
+        m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
 
-        left = right = False
+        ret = Rotation.BACK
 
         dy, dx = -dir * m, abs(dir - 1) * m
         d = [
-            (y + dy, x + dx),    # dyf = -1 * dir, dxf = abs(dir - 1)
-            (y - dx, x + dy),    # dyl = dxf, dxl = -dyf
-            (y + dx, x - dy),    # dyr = -dxf, dxr = dyf 
+            (y - dy, x + dx),    # dyf = -1 * dir, dxf = abs(dir - 1)
+            (y + dx, x + dy),    # dyl = dxf, dxl = dyf
+            (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf 
         ]
-        if all(line[:3]):        # left
-        # if line[0]:
-            left = True
-            py, px = d[1][0], d[1][1]
+
+        print(d, y, x, line, action)
+        
+        if action == "stop" and line[3]:
+            print("a fazer esta merda, doubt")
+            py, px = d[0][0], d[0][1]
             if self.labMap[py][px] == '.':
+                ret = Rotation.NONE
                 self.labMap[py][px] = "*"
             elif self.labMap[py][px] == '*':
-                return Rotation.LEFT
+                return Rotation.NONE
 
-        # if line[-1]:       
         if all(line[4:]):        # right
-            right = True
             py, px = d[2][0], d[2][1]
+            print("rigth", self.labMap[py][px])
             if self.labMap[py][px] == '.':
+                ret = Rotation.RIGHT
                 self.labMap[py][px] = "*"
             elif self.labMap[py][px] == '*':
                 return Rotation.RIGHT
         
-        if action == "rotating" and line[3]:
-            print("a fazer esta merda, doubt")
-            py, px = d[0][0], d[0][1]
+        if all(line[:3]):        # left
+            py, px = d[1][0], d[1][1]
+            print("left", self.labMap[py][px])
             if self.labMap[py][px] == '.':
+                ret = Rotation.LEFT
                 self.labMap[py][px] = "*"
-        # if
-            #   find_next()
-
+            elif self.labMap[py][px] == '*':
+                return Rotation.LEFT
 
         self.print_map()
-        return Rotation.LEFT if left else Rotation.RIGHT if right else None
+        return ret
 
 
 class MyRob(CRobLinkAngs):
@@ -192,15 +198,32 @@ class MyRob(CRobLinkAngs):
             # Move to goal
             lPow, rPow = self.move_to()
 
+            # Make robot visit intersection
+            # if all(measures[:3]) or all(measures[:4]):
+            print(measures)
+            if (all(measures[:3]) or all(measures[4:])) or self.action == 'stop': # FIXME: noise
+                dir = self.map.explore_inter(self.measures.x, self.measures.y, a, measures, self.action)
+
+                # self.goal = round(self.measures.x), round(self.measures.y)
+                if not self.has_plan:
+                    if dir == Rotation.LEFT:
+                        self.is_rotating_to = Direction( (a + 1) % 4 )
+                    elif dir == Rotation.RIGHT:
+                        self.is_rotating_to = Direction( (a + 3) % 4 )
+                    elif dir == Rotation.BACK:
+                        self.is_rotating_to = Direction( (a + 2) % 4 )
+
+                    self.has_plan = True
+
             #print(self.measures.lineSensor)
             if self.action == 'stop':
+                self.has_plan = False
                 #print(self.measures.lineSensor, 'done')
                 
                 if self.is_rotating_to != None:
                     self.action = "rotating"
                     dir = self.is_rotating_to
                 else:
-                    print("lixo")
                     self.action = 'moving'
                     dir = Direction(a)
                 
@@ -214,24 +237,10 @@ class MyRob(CRobLinkAngs):
                 elif dir.value == Direction.SOUTH.value:
                     self.goal = self.goal[0], self.goal[1] - 2
 
-            # Make robot visit intersection
-            # if all(measures[:3]) or all(measures[:4]):
-            print(measures)
-            if (all(measures[:3]) or all(measures[4:])): # FIXME: noise
-                dir = self.map.explore_inter(self.measures.x, self.measures.y, a, measures, self.action)
-
-                # self.goal = round(self.measures.x), round(self.measures.y)
-                if not self.has_plan:
-                    if dir == Rotation.LEFT:
-                        self.is_rotating_to = Direction( (a + 1) % 4 )
-                    elif dir == Rotation.RIGHT:
-                        self.is_rotating_to = Direction( (a + 3) % 4 )
-                    self.has_plan = True
-            
             # Make robot visit next position and paint map
             if self.prev_x and self.prev_x != x or self.prev_y != y:
                 self.map.visit(self.measures.x, self.measures.y, self.measures.compass)
-                self.has_plan = False
+            
         
         elif self.action == 'dead_end??':
             # go to nearest *
