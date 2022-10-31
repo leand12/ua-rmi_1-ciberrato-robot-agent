@@ -70,8 +70,6 @@ class Mapper:
 
         if ground != -1:
             self.checkpoints[ground] = (x,y)
-            if len(self.checkpoints) == 3:
-                self.save_to_file()
 
     def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
         #print('explore_inter', x, y, line)
@@ -97,12 +95,22 @@ class Mapper:
             #print("rigth", self.labMap[py][px])
             if self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
+            # remove unnecessary *
+            py2, px2 = y - 2*dx, x - 2*dy
+            if self.labMap[py2][px2] == 'x':
+                dir = ['|', '-'][angle % 2]
+                self.labMap[py][px] = dir
 
         if all(line[:3]):        # left
             py, px = d[1][0], d[1][1]
             #print("left", self.labMap[py][px])
             if self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
+            # remove unnecessary *
+            py2, px2 = y + 2*dx, x + 2*dy
+            if self.labMap[py2][px2] == 'x':
+                dir = ['|', '-'][angle % 2]
+                self.labMap[py][px] = dir
 
         self.print_map()
 
@@ -129,6 +137,11 @@ class Mapper:
             py, px = d[0][0], d[0][1]
             if self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
+                # remove unnecessary *
+                py2, px2 = y - 2*dy, x + 2*dx
+                if self.labMap[py2][px2] == 'x':
+                    dir = ['-', '|'][angle % 2]
+                    self.labMap[py][px] = dir
                 self.print_map()
 
         py, px = d[2][0], d[2][1]
@@ -364,8 +377,8 @@ class MyRob(CRobLinkAngs):
                 self.action = 'search_rotate'
                 if (ny, nx) == d[0]:
                     # does not rotate
-                    x = x + dx + self.start[0] - int(self.map.size[0] / 2)
-                    y = y - dy + self.start[1] - int(self.map.size[1] / 2)
+                    x = nx + self.start[0] - int(self.map.size[0] / 2)
+                    y = ny + self.start[1] - int(self.map.size[1] / 2)
                     self.goal = (x, y)
                     self.action = 'search_move'
                 elif (ny, nx) == d[1]:
@@ -508,6 +521,9 @@ class MyRob(CRobLinkAngs):
                     if not min_dist or min_dist > d:
                         min_dist = d
                         steps = s
+
+        if min_dist == None:
+            self.map.save_to_file()
 
         return steps
 

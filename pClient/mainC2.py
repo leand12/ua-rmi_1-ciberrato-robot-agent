@@ -155,7 +155,7 @@ class Mapper:
                     else:
                         fp.write(self.labMap[y][x].replace('.', ' '))
                 fp.write('\n')
-
+        quit()
 
 class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
@@ -470,6 +470,9 @@ class MyRob(CRobLinkAngs):
                         min_dist = d
                         steps = s
 
+        if min_dist == None:
+            self.map.save_to_file()
+
         return steps
 
     def __a_distance(self, cx, cy, gx, gy) -> Tuple[float, List[Tuple[float, float]]]:
@@ -491,22 +494,18 @@ class MyRob(CRobLinkAngs):
 
             # NORTH
             if self.map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
-                # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
                 visited.append((x, y + 1))
             # SOUTH
             if self.map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
-                # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
                 visited.append((x, y - 1))
             # EAST
             if self.map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
-                # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
                 visited.append((x + 1, y))
             # WEST
             if self.map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
-                # TODO: change distance to take into consideration the rotations
                 queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
                 visited.append((x - 1, y))
             queue.sort(key=lambda x: x.distance)
