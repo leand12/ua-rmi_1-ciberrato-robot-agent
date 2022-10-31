@@ -7,6 +7,7 @@ from croblink import *
 from math import *
 import xml.etree.ElementTree as ET
 from typing import Tuple, List
+import itertools
 
 CELLROWS = 7
 CELLCOLS = 14
@@ -48,28 +49,34 @@ class Direction(int, Enum):
 class Mapper:
     size = (49, 21)
 
-    def __init__(self, start: Tuple[int, int]) -> 'Mapper':
+    def __init__(self, start: Tuple[int, int], nbeacons: int) -> 'Mapper':
         self.start = start
         self.labMap = [['.']*self.size[0] for _ in range(self.size[1])]
+        self.checkpoints = {}
+        self.nbeacons = nbeacons
 
     def print_map(self) -> None:
         for row in reversed(self.labMap):
             print(''.join(row).replace('.', '\033[104m.\033[0m'))
         print('\n' * 2)
 
-    def visit(self, x: int, y: int, angle: float) -> None:
+    def visit(self, x: int, y: int, angle: float, ground: int = -1) -> None:
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
-        dir = ['-', '|'][angle % 2]
+        dir = ['-', '|'][round(angle / 90) % 2]
         if self.labMap[y][x] != 'x':
             self.labMap[y][x] = dir
 
+        if ground != -1:
+            self.checkpoints[ground] = (x,y)
+
     def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        print(bcolors.BOLD, 'EXPLORE_INTER', bcolors.END, x, y, angle, line)
+        #print('explore_inter', x, y, line)
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
+        #print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -81,8 +88,11 @@ class Mapper:
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
 
+        #print(d, y, x, line)
+
         if all(line[4:]):        # right
             py, px = d[2][0], d[2][1]
+            #print("rigth", self.labMap[py][px])
             if self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
@@ -93,6 +103,7 @@ class Mapper:
 
         if all(line[:3]):        # left
             py, px = d[1][0], d[1][1]
+            #print("left", self.labMap[py][px])
             if self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
@@ -104,10 +115,11 @@ class Mapper:
         self.print_map()
 
     def make_decision(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        print(bcolors.BOLD, 'MAKE_DECISION', bcolors.END, x, y, angle, line)
+        #print('make_decision', x, y, line)
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
+        #print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -118,6 +130,8 @@ class Mapper:
             (y + dx, x + dy),    # dyl = dxf, dxl = dyf
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
+
+        #print(d, y, x, line)
 
         if line[3]:
             py, px = d[0][0], d[0][1]
@@ -131,31 +145,55 @@ class Mapper:
                 self.print_map()
 
         py, px = d[2][0], d[2][1]
+        print("rigth", self.labMap[py][px])
         if self.labMap[py][px] == '*':
             return Rotation.RIGHT
 
         py, px = d[1][0], d[1][1]
+        print("left", self.labMap[py][px])
         if self.labMap[py][px] == '*':
             return Rotation.LEFT
 
         py, px = d[0][0], d[0][1]
+        print("front", self.labMap[py][px])
         if self.labMap[py][px] == '*':
             return Rotation.NONE
 
         return Rotation.BACK
 
+
     def save_to_file(self):
-        with open('simulator/solution.map', 'w') as fp:
-            for y in reversed(range(self.size[1])):
-                for x in range(self.size[0]):
-                    if y == 10 and x == 24:
-                        fp.write('I')
-                    elif y % 2 == x % 2:
-                        fp.write(' ')
-                    else:
-                        fp.write(self.labMap[y][x].replace('.', ' '))
-                fp.write('\n')
-        quit()
+        with open('simulator/solution.path', 'w') as fp:
+            
+            min_dist = None
+            min_steps = []
+            checkpoints = [v for k,v in self.checkpoints.items() if k != 0]
+            for iteration in itertools.combinations(checkpoints, len(checkpoints)):
+                iteration = list(iteration)
+                iteration.append(self.checkpoints[0])
+                iteration.insert(0, self.checkpoints[0])
+                print(iteration, "\n"*10)
+                
+                curr_dist = 0
+                curr_steps = [self.checkpoints[0]]
+                for pos in range(len(iteration[:-1])):
+                    cx, cy = iteration[pos]
+                    gx, gy = iteration[pos + 1]
+                    d, steps = a_distance(cx, cy, gx, gy, self.labMap)
+
+                    curr_dist += d
+                    curr_steps.extend(steps)
+
+                if not min_dist or (curr_dist < min_dist and curr_dist != 0):
+                    min_dist = curr_dist
+                    min_steps = curr_steps
+                print(curr_dist, curr_steps)
+
+            print(min_steps)
+            fx, fy = min_steps[0]
+            for s in range(0, len(min_steps), 2):
+                fp.write(str(min_steps[s][0] - fx) + " " + str(min_steps[s][1] - fy) + "\n")
+            exit(1)
 
 class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
@@ -194,7 +232,8 @@ class MyRob(CRobLinkAngs):
         self.readSensors()
         self.goal = (self.measures.x, self.measures.y)
         self.start = self.goal
-        self.map = Mapper(self.goal)
+        #print(self.goal)
+        self.map = Mapper(self.goal, self.nBeacons)
         self.prev_out = (0, 0)
         self.is_rotating_to = Direction(round(
             (self.measures.compass + 360) / 90) % 4)
@@ -242,8 +281,8 @@ class MyRob(CRobLinkAngs):
         x, y, a = round(self.measures.x), round(self.measures.y), round(
             (self.measures.compass + 360) / 90) % 4
 
-        # print('\n', bcolors.BOLD, self.measures.x,
-        #       self.measures.y, self.measures.compass, bcolors.END)
+        print('\n', bcolors.BOLD, self.measures.x,
+              self.measures.y, self.measures.compass, bcolors.END)
 
         if self.action == 'rotating':
             # Rotates the robot
@@ -272,6 +311,7 @@ class MyRob(CRobLinkAngs):
             # Move to goal
             lPow, rPow = self.move_to()
 
+            # print(self.measures.lineSensor)
             if self.action == 'stop':
                 dir = self.map.make_decision(
                     self.measures.x,
@@ -299,9 +339,10 @@ class MyRob(CRobLinkAngs):
 
             # Make robot visit next position and paint map
             if self.prev_x and self.prev_x != x or self.prev_y != y:
-                self.map.visit(self.measures.x, self.measures.y, a)
+                self.map.visit(self.measures.x, self.measures.y,
+                               self.measures.compass, self.measures.ground)
 
-        elif self.action in ("searching", "search_move", "search_rotate"):
+        elif self.action in ("searching", "search_move", "search_rotate", "stop"):
 
             x = round(self.measures.x -
                       self.start[0]) + int(self.map.size[0] / 2)
@@ -325,18 +366,19 @@ class MyRob(CRobLinkAngs):
                     dy + self.start[1] - int(self.map.size[1] / 2)
                 self.is_rotating_to = Direction(
                     round((self.measures.compass + 360) / 90) % 4)
-                # print(bcolors.BOLD, "DONE  moving to:", self.goal, 'with rot', self.is_rotating_to.angle, bcolors.END)
+                print(bcolors.BOLD, "DONE  moving to:", self.goal, 'with rot', self.is_rotating_to.angle, bcolors.END)
                 return
 
             nx, ny = self.steps[0]
+            #print(a, x ,y, d, self.steps, nx, ny)
             if self.action == 'searching':
-                # print(bcolors.BLUE, 'searching', "({:.3f}, {:.3f}) ".format(
-                #     nx, ny), self.steps, d, bcolors.END)
+                print(bcolors.BLUE, 'searching', "({:.3f}, {:.3f}) ".format(
+                    nx, ny), self.steps, d, bcolors.END)
                 self.action = 'search_rotate'
                 if (ny, nx) == d[0]:
                     # does not rotate
-                    x = x + dx + self.start[0] - int(self.map.size[0] / 2)
-                    y = y - dy + self.start[1] - int(self.map.size[1] / 2)
+                    x = nx + self.start[0] - int(self.map.size[0] / 2)
+                    y = ny + self.start[1] - int(self.map.size[1] / 2)
                     self.goal = (x, y)
                     self.action = 'search_move'
                 elif (ny, nx) == d[1]:
@@ -351,13 +393,13 @@ class MyRob(CRobLinkAngs):
 
             if self.action == 'search_rotate':
                 # rotate
-                # print(bcolors.PINK, 'search_rotate', bcolors.END, end=' ')
+                print(bcolors.PINK, 'search_rotate', bcolors.END, end=' ')
                 lPow, rPow = self.rotate()
                 if self.action == 'stop':
                     self.action = 'searching'
 
             if self.action == 'search_move':
-                # print(bcolors.YELLOW, 'search_move', bcolors.END, end=' ')
+                print(bcolors.YELLOW, 'search_move', bcolors.END, end=' ')
                 lPow, rPow = self.move_to()
                 if self.action == 'stop':
                     print(bcolors.BOLD, "POP", bcolors.END)
@@ -369,12 +411,12 @@ class MyRob(CRobLinkAngs):
         self.prev_out = (
             lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
         self.driveMotors(lPow, rPow)
-        # print(bcolors.BOLD, "prev_out {:.3f} {:.3f} ".format(
-        #     self.prev_out[0], self.prev_out[1]), "pow {:.3f} {:.3f}".format(lPow, rPow), bcolors.END)
+        print(bcolors.BOLD, "prev_out {:.3f} {:.3f} ".format(
+            self.prev_out[0], self.prev_out[1]), "pow {:.3f} {:.3f}".format(lPow, rPow), bcolors.END)
         return
 
     def follow_line(self) -> Tuple[float, float]:
-        """Helps the robot stay on top of the line."""
+        """Helps the robot staying on top of the line."""
 
         measures = [int(i) for i in self.measures.lineSensor]
         measures = [(self.prev_measures[i]*0.3 +
@@ -382,6 +424,7 @@ class MyRob(CRobLinkAngs):
         self.prev_measures = measures
 
         lPow = rPow = 0.1
+        # s = 0.25
         s = 0.08
         for i in range(0, 3):
             rPow += s*(3-i)*measures[i]
@@ -398,7 +441,7 @@ class MyRob(CRobLinkAngs):
         angle_to = self.is_rotating_to.angle
         angle_from = self.measures.compass
 
-        # print(f"{bcolors.PINK}rot{bcolors.END} from {angle_from:.2f} to {angle_to:.2f}")
+        print(f"{bcolors.PINK}rot{bcolors.END} from {angle_from:.2f} to {angle_to:.2f}")
 
         rad_to = angle_to * pi / 180
         rad_from = angle_from * pi / 180
@@ -407,6 +450,7 @@ class MyRob(CRobLinkAngs):
         a += -360 if a > 180 else 360 if a < -180 else 0
 
         a = a / 180 * pi
+        print(' a=', a)
 
         if a == 0:
             self.action = 'stop'
@@ -426,17 +470,22 @@ class MyRob(CRobLinkAngs):
         x1, y1 = self.measures.x, self.measures.y
         dist = euclidean((x1, y1), self.goal)
 
-        # print(
-        #     f"{bcolors.YELLOW}mov{bcolors.END} from ({x1:.3f},{y1:.3f}) to ({x2:.3f},{y2:.3f})")
+        print(
+            f"{bcolors.YELLOW}mov{bcolors.END} from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
         if x2 == x1 and y1 == y2:
+            if self.action.startswith("search"):
+                print(bcolors.PINK, bcolors.UNDERLINE,
+                      'LINDO', x1, y1, x2, y2, bcolors.END)
             self.action = 'stop'
+
             return tuple(-a for a in self.prev_out)
 
         a1 = atan2(y2 - y1, x2 - x1)
         a2 = self.measures.compass * pi / 180
 
         a0 = a1 - a2
+        # print(f'a0={a0:6.2f}  cos(a0)={cos(a0):5.2f}  sin(a0)={sin(a0):5.2f}')
 
         c = cos(a0)
         s = sin(a0)
@@ -448,10 +497,13 @@ class MyRob(CRobLinkAngs):
         lPwr = ((2*(n1 - min_) / rng_) - 1) * min(dist, 0.15)
         rPwr = ((2*(n2 - min_) / rng_) - 1) * min(dist, 0.15)
 
+        print(bcolors.BOLD, f"i want ({lPwr:6.3f},{rPwr:6.3f})", bcolors.END)
+
         lPwr = 2*lPwr - self.prev_out[0]
         rPwr = 2*rPwr - self.prev_out[1]
 
         return lPwr, rPwr
+
 
     def search(self) -> List[Tuple[float, float]]:
         """Finds a new intersection to explore and returns the list of steps to reach it"""
@@ -465,7 +517,7 @@ class MyRob(CRobLinkAngs):
         for i, row in enumerate(self.map.labMap):
             for j, col in enumerate(row):
                 if col == '*':
-                    d, s = self.__a_distance(cx, cy, j, i)
+                    d, s = a_distance(cx, cy, j, i, self.map.labMap)
                     if not min_dist or min_dist > d:
                         min_dist = d
                         steps = s
@@ -475,40 +527,46 @@ class MyRob(CRobLinkAngs):
 
         return steps
 
-    def __a_distance(self, cx, cy, gx, gy) -> Tuple[float, List[Tuple[float, float]]]:
-        """Returns the a* distance between the current position and the goal"""
+def a_distance(cx, cy, gx, gy, map) -> Tuple[float, List[Tuple[float, float]]]:
+    """Returns the a* distance between the current position and the goal"""
 
-        queue: List[Node] = [Node(position=(cx, cy))]
-        visited: List[Node] = [Node(position=(cx, cy))]
+    queue: List[Node] = [Node(position=(cx, cy))]
+    visited: List[Node] = [Node(position=(cx, cy))]
 
-        while queue:
-            n: Node = queue.pop(0)
-            d, x, y = n.distance, *n.position
+    print(cx, cy,gx,gy)
 
-            if y == gy and x == gx:
-                final = []
-                while n.parent != None:
-                    final.append(n.position)
-                    n = n.parent
-                return d, list(reversed(final))
+    while queue:
+        n: Node = queue.pop(0)
+        d, x, y = n.distance, *n.position
 
-            # NORTH
-            if self.map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
-                queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
-                visited.append((x, y + 1))
-            # SOUTH
-            if self.map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
-                queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
-                visited.append((x, y - 1))
-            # EAST
-            if self.map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
-                queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
-                visited.append((x + 1, y))
-            # WEST
-            if self.map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
-                queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
-                visited.append((x - 1, y))
-            queue.sort(key=lambda x: x.distance)
+        if y == gy and x == gx:
+            final = []
+            while n.parent != None:
+                final.append(n.position)
+                n = n.parent
+            return d, list(reversed(final))
+
+        # NORTH
+        if map[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
+            # TODO: change distance to take into consideration the rotations
+            queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
+            visited.append((x, y + 1))
+        # SOUTH
+        if map[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
+            # TODO: change distance to take into consideration the rotations
+            queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
+            visited.append((x, y - 1))
+        # EAST
+        if map[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
+            # TODO: change distance to take into consideration the rotations
+            queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
+            visited.append((x + 1, y))
+        # WEST
+        if map[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
+            # TODO: change distance to take into consideration the rotations
+            queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
+            visited.append((x - 1, y))
+        queue.sort(key=lambda x: x.distance)
 
 
 class Node:
