@@ -66,11 +66,11 @@ class Mapper:
             self.labMap[y][x] = dir
 
     def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        #print('explore_inter', x, y, line)
+        print(bcolors.BOLD, 'EXPLORE_INTER', bcolors.END, x, y, angle, line)
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
-        #print(angle)
+        # print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -99,11 +99,11 @@ class Mapper:
         self.print_map()
 
     def make_decision(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        #print('make_decision', x, y, line)
+        print(bcolors.BOLD, 'MAKE_DECISION', bcolors.END, x, y, angle, line)
         x = round(x - self.start[0]) + int(self.size[0] / 2)
         y = round(y - self.start[1]) + int(self.size[1] / 2)
 
-        #print(angle)
+        # print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -139,7 +139,6 @@ class Mapper:
             return Rotation.NONE
 
         return Rotation.BACK
-
 
     def save_to_file(self):
         with open('simulator/solution.map', 'w') as fp:
@@ -191,7 +190,7 @@ class MyRob(CRobLinkAngs):
         self.readSensors()
         self.goal = (self.measures.x, self.measures.y)
         self.start = self.goal
-        #print(self.goal)
+        # print(self.goal)
         self.map = Mapper(self.goal)
         self.prev_out = (0, 0)
         self.is_rotating_to = Direction(round(
@@ -237,29 +236,26 @@ class MyRob(CRobLinkAngs):
     def wander(self):
 
         measures = [int(i) for i in self.measures.lineSensor]
-        position = self.measures.x, self.measures.y
         x, y, a = round(self.measures.x), round(self.measures.y), round(
             (self.measures.compass + 360) / 90) % 4
 
-        #print('\n', bcolors.BOLD, self.action, self.measures.x,
-        #      self.measures.y, self.prev_out, self.measures.compass, bcolors.END)
+        print('\n', bcolors.BOLD, self.measures.x,
+              self.measures.y, self.measures.compass, bcolors.END)
 
         if self.action == 'rotating':
             # Rotates the robot
             lPow, rPow = self.rotate()
-            if lPow == 0 and rPow == 0:
+            if self.action == 'stop':
                 self.action = 'moving'
-                # self.is_rotating_to = None
 
         elif self.action in ('moving', 'stopping'):
 
             # Make robot visit intersection
-            # if all(measures[:3]) or all(measures[:4]):
-            #print(measures)
-            if (all(measures[:3]) or all(measures[4:])) and not self.action == 'stopping':  # FIXME: noise
+            # FIXME: noise
+            if (all(measures[:3]) or all(measures[4:])) and not self.action == 'stopping':
                 self.map.explore_inter(
-                    self.measures.x + .3*self.is_rotating_to.next[0], 
-                    self.measures.y + .3*self.is_rotating_to.next[1], 
+                    self.measures.x + .3*self.is_rotating_to.next[0],
+                    self.measures.y + .3*self.is_rotating_to.next[1],
                     a, measures)
 
                 self.goal = (
@@ -280,7 +276,6 @@ class MyRob(CRobLinkAngs):
                     self.measures.y,
                     a, measures)
 
-                # self.goal = round(self.measures.x), round(self.measures.y)
                 self.action = "rotating"
                 if dir == Rotation.LEFT:
                     self.is_rotating_to = Direction((a + 1) % 4)
@@ -305,17 +300,12 @@ class MyRob(CRobLinkAngs):
                 self.map.visit(self.measures.x, self.measures.y,
                                self.measures.compass)
 
+        elif self.action in ("searching", "search_move", "search_rotate", "stop"):
 
-        elif self.action in ("searching", "search_move", "search_rotate"):
-            print(bcolors.CYAN, bcolors.UNDERLINE, self.action, bcolors.END, end=' ')
-
-            if self.action == 'search_move' and self.measures.x == self.goal[0] and self.measures.y == self.goal[1]:
-                print(bcolors.BOLD, "POP", bcolors.END)
-                self.steps.pop(0)
-                self.action = 'searching'
-            
-            x = round(self.measures.x - self.start[0]) + int(self.map.size[0] / 2)
-            y = round(self.measures.y - self.start[1]) + int(self.map.size[1] / 2)
+            x = round(self.measures.x -
+                      self.start[0]) + int(self.map.size[0] / 2)
+            y = round(self.measures.y -
+                      self.start[1]) + int(self.map.size[1] / 2)
             # check if needs to rotate
             m = 1 if a < 2 else -1
             dir = a % 2
@@ -326,18 +316,22 @@ class MyRob(CRobLinkAngs):
                 (y + dx, x + dy),    # dyl = dxf, dxl = dyf
                 (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
             ]
-            #print(self.steps)
+
             if len(self.steps) == 0:
-                print(bcolors.BOLD, "DONE", bcolors.END)
                 self.action = "moving"
-                self.goal = x + dx + self.start[0] - int(self.map.size[0] / 2), y - dy + self.start[1] - int(self.map.size[1] / 2)
-                self.is_rotating_to = Direction(round((self.measures.compass + 360) / 90) % 4)
+                self.goal = x + dx + \
+                    self.start[0] - int(self.map.size[0] / 2), y - \
+                    dy + self.start[1] - int(self.map.size[1] / 2)
+                self.is_rotating_to = Direction(
+                    round((self.measures.compass + 360) / 90) % 4)
+                print(bcolors.BOLD, "DONE  moving to:", self.goal, 'with rot', self.is_rotating_to.angle, bcolors.END)
                 return
 
             nx, ny = self.steps[0]
             #print(a, x ,y, d, self.steps, nx, ny)
             if self.action == 'searching':
-                print(bcolors.BLUE, 'searching', self.goal, position, a, d, self.steps, bcolors.END)
+                print(bcolors.BLUE, 'searching', "({:.3f}, {:.3f}) ".format(
+                    nx, ny), self.steps, d, bcolors.END)
                 self.action = 'search_rotate'
                 if (ny, nx) == d[0]:
                     # does not rotate
@@ -357,28 +351,31 @@ class MyRob(CRobLinkAngs):
 
             if self.action == 'search_rotate':
                 # rotate
+                print(bcolors.PINK, 'search_rotate', bcolors.END, end=' ')
                 lPow, rPow = self.rotate()
-                print(bcolors.PINK, 'search_rotate', self.goal, position, "{:6.3f} {:6.3f} ".format(lPow, rPow), bcolors.END)
-                if self.measures.compass == self.is_rotating_to.angle:
-                    self.action = "searching"
+                if self.action == 'stop':
+                    self.action = 'searching'
 
             if self.action == 'search_move':
+                print(bcolors.YELLOW, 'search_move', bcolors.END, end=' ')
                 lPow, rPow = self.move_to()
-                print(bcolors.YELLOW, 'search_move', self.goal, position, "{:6.3f} {:6.3f} ".format(lPow, rPow) , bcolors.END)
                 if self.action == 'stop':
-                    self.action = "searching"
+                    print(bcolors.BOLD, "POP", bcolors.END)
+                    self.steps.pop(0)
+                    self.action = 'searching'
 
         self.prev_x = self.measures.x
         self.prev_y = self.measures.y
         self.prev_out = (
             lPow + self.prev_out[0]) / 2, (rPow + self.prev_out[1]) / 2
         self.driveMotors(lPow, rPow)
+        print(bcolors.BOLD, "prev_out {:.3f} {:.3f} ".format(
+            self.prev_out[0], self.prev_out[1]), "pow {:.3f} {:.3f}".format(lPow, rPow), bcolors.END)
         return
 
     def follow_line(self) -> Tuple[float, float]:
         """Helps the robot staying on top of the line."""
 
-        #print("follow line")
         measures = [int(i) for i in self.measures.lineSensor]
         measures = [(self.prev_measures[i]*0.3 +
                      measures[i]*0.7)/2 for i in range(7)]
@@ -402,7 +399,7 @@ class MyRob(CRobLinkAngs):
         angle_to = self.is_rotating_to.angle
         angle_from = self.measures.compass
 
-        #print(f"rotating from {angle_from:5.1f} to {angle_to:5.1f}")
+        print(f"{bcolors.PINK}rot{bcolors.END} from {angle_from:.2f} to {angle_to:.2f}")
 
         rad_to = angle_to * pi / 180
         rad_from = angle_from * pi / 180
@@ -411,9 +408,11 @@ class MyRob(CRobLinkAngs):
         a += -360 if a > 180 else 360 if a < -180 else 0
 
         a = a / 180 * pi
+        print(' a=', a)
 
         if a == 0:
-            return 0, 0
+            self.action = 'stop'
+            return tuple(-a for a in self.prev_out)
 
         pwr = min(2*abs(a) - abs(self.prev_out[0] - self.prev_out[1]), 0.3)
 
@@ -429,13 +428,15 @@ class MyRob(CRobLinkAngs):
         x1, y1 = self.measures.x, self.measures.y
         dist = euclidean((x1, y1), self.goal)
 
-        #print(f"moving from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
+        print(
+            f"{bcolors.YELLOW}mov{bcolors.END} from ({x1:6.1f},{y1:6.1f}) to ({x2:6.1f},{y2:6.1f})")
 
         if x2 == x1 and y1 == y2:
             if self.action.startswith("search"):
-                print(bcolors.PINK, bcolors.UNDERLINE, 'LINDO', x1, y1, x2, y2, bcolors.END)
+                print(bcolors.PINK, bcolors.UNDERLINE,
+                      'LINDO', x1, y1, x2, y2, bcolors.END)
             self.action = 'stop'
-            
+
             return tuple(-a for a in self.prev_out)
 
         a1 = atan2(y2 - y1, x2 - x1)
@@ -454,8 +455,11 @@ class MyRob(CRobLinkAngs):
         lPwr = ((2*(n1 - min_) / rng_) - 1) * min(dist, 0.15)
         rPwr = ((2*(n2 - min_) / rng_) - 1) * min(dist, 0.15)
 
-        #print('\033[91m', a0, '\033[0m')
-        #print('\033[91m', (lPwr, rPwr), '\033[0m')
+        print(bcolors.BOLD, f"i want ({lPwr:6.3f},{rPwr:6.3f})", bcolors.END)
+
+        lPwr = 2*lPwr - self.prev_out[0]
+        rPwr = 2*rPwr - self.prev_out[1]
+
         return lPwr, rPwr
 
     def search(self) -> List[Tuple[float, float]]:
@@ -483,12 +487,9 @@ class MyRob(CRobLinkAngs):
         queue: List[Node] = [Node(position=(cx, cy))]
         visited: List[Node] = [Node(position=(cx, cy))]
 
-        print(cx, cy,gx,gy)
-
         while queue:
             n: Node = queue.pop(0)
             d, x, y = n.distance, *n.position
-            print(d,x,y)
 
             if y == gy and x == gx:
                 final = []
