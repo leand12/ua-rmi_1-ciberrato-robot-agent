@@ -83,21 +83,21 @@ class Mapper:
 
         if all(line[4:]):        # right
             py, px = d[2][0], d[2][1]
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
             py2, px2 = y - 2*dx, x - 2*dy
-            if self.labMap[py2][px2] == 'x':
+            if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                 dir = ['|', '-'][angle % 2]
                 self.labMap[py][px] = dir
 
         if all(line[:3]):        # left
             py, px = d[1][0], d[1][1]
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
             py2, px2 = y + 2*dx, x + 2*dy
-            if self.labMap[py2][px2] == 'x':
+            if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                 dir = ['|', '-'][angle % 2]
                 self.labMap[py][px] = dir
 
@@ -121,25 +121,25 @@ class Mapper:
 
         if line[3]:
             py, px = d[0][0], d[0][1]
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
                 # remove unnecessary *
                 py2, px2 = y - 2*dy, x + 2*dx
-                if self.labMap[py2][px2] == 'x':
+                if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                     dir = ['-', '|'][angle % 2]
                     self.labMap[py][px] = dir
                 self.print_map()
 
         py, px = d[2][0], d[2][1]
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.RIGHT
 
         py, px = d[1][0], d[1][1]
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.LEFT
 
         py, px = d[0][0], d[0][1]
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.NONE
 
         return Rotation.BACK
@@ -156,6 +156,9 @@ class Mapper:
                         fp.write(self.labMap[y][x].replace('.', ' '))
                 fp.write('\n')
         quit()
+
+    def check(self, x, y):
+        return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 
 class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
@@ -252,6 +255,10 @@ class MyRob(CRobLinkAngs):
                 self.action = 'moving'
 
         elif self.action in ('moving', 'stopping'):
+
+            if not any(measures) and not self.action == 'stopping':
+                self.action = "rotating"
+                self.is_rotating_to = Direction((a + 2) % 4)
 
             # Make robot visit intersection
             # FIXME: noise
@@ -493,19 +500,19 @@ class MyRob(CRobLinkAngs):
                 return d, list(reversed(final))
 
             # NORTH
-            if self.map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
+            if self.map.check(x, y + 1) and self.map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
                 queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
                 visited.append((x, y + 1))
             # SOUTH
-            if self.map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
+            if self.map.check(x, y - 1) and self.map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
                 queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
                 visited.append((x, y - 1))
             # EAST
-            if self.map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
+            if self.map.check(x + 1, y) and self.map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
                 queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
                 visited.append((x + 1, y))
             # WEST
-            if self.map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
+            if self.map.check(x - 1, y) and self.map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
                 queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
                 visited.append((x - 1, y))
             queue.sort(key=lambda x: x.distance)
