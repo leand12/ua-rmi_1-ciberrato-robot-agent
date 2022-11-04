@@ -4,6 +4,17 @@ from croblink import *
 from math import *
 import xml.etree.ElementTree as ET
 
+class bcolors:
+    PINK = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
 CELLROWS=7
 CELLCOLS=14
 
@@ -82,21 +93,28 @@ class MyRob(CRobLinkAngs):
             self.driveMotors(0.0,0.1)
         else:
             measures = [int(i) for i in self.measures.lineSensor]
-            measures = [(self.prev_measures[i]*0.3 + measures[i]*0.7)/2 for i in range(7)]
             self.prev_measures = measures
+            measures = [(self.prev_measures[i]*0.3 + measures[i]*0.7) for i in range(7)]
 
-            lPow = rPow = 0.1
-            # s = 0.25
-            s = 0.08
+            w = [2, 0.2, 0.02]
+
+            n1 = n2 = 0.12
             for i in range(0, 3):
-                rPow += s*(3-i)*measures[i]
-                lPow -= s*(3-i)*measures[i]
+                n2 += w[i]*measures[i]
+                n1 -= w[i]*measures[i]
             for i in range(4, 7):
-                rPow -= s*(i-3)*measures[i]
-                lPow += s*(i-3)*measures[i]
+                n2 -= w[6-i]*measures[i]
+                n1 += w[6-i]*measures[i]
+
+            rng_ = max(abs(n1), abs(n2), 0.15)
+
+            n1 = 2*((n1 + rng_) / (2*rng_)) - 1
+            n2 = 2*((n2 + rng_) / (2*rng_)) - 1
+
+            lPow = n1 * 0.15
+            rPow = n2 * 0.15
+
             self.driveMotors(lPow,rPow)
-            print([f"{i:4.2f}" for i in measures])
-            # print(lPow, rPow)
 
 
 class Map():
