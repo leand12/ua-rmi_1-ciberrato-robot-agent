@@ -19,6 +19,7 @@
 */
 
 #include <qapplication.h>
+#include <QLocale>
 #include <qstring.h>
 #include <iostream>
 #include <stdlib.h>
@@ -149,6 +150,9 @@ int main( int argc, char **argv )
 
     Visualizador.connect( &Visualizador, SIGNAL( lastWindowClosed() ),
                           &Visualizador, SLOT( quit() ) );
+
+    setlocale(LC_ALL,"C");
+    QLocale::setDefault(QLocale::c());
 
 	//cout << "done.\nRunning...\n";
 
