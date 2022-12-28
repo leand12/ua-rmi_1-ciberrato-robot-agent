@@ -1682,6 +1682,43 @@ void cbRobot::updateScoreLineControl2022()
     emit robScoreChanged((int) score);
 }
 
+void cbRobot::updateScoreLineMappingPlanning2022()
+{
+    if (isRemoved() || hasFinished()) return;
+    
+    if (hasCollide() && !collisionPrevCycle)
+    {
+        //DEBUG
+	//simulator->grAux->addFinalPoint(id,curPos.Coord());
+        //double distCol=simulator->grAux->dist(id);
+	//cerr << simulator->curTime() << ": R" << id << " distCol=" << distCol <<"\n";
+        scorePenalties += -(collisionWallPenalty * hasCollideWall()) - (collisionRobotPenalty * hasCollideRobot());
+	collisionCount++;
+
+        emit robCollisionsChanged((int) collisionCount);
+    }
+    collisionPrevCycle=hasCollide();
+
+    switch(_state) {
+	    case RUNNING:
+		 {
+
+            if (simulator->Lab()->wallDistanceAboveHeight(Center(),-1.0) > 0.5) {
+                scorePenalties += 10;
+            }
+
+		    score = scorePenalties + scoreControl;  
+
+		    if(endLedOn()) { // robot finishing at Beacon
+                        score=scorePenalties;
+		    }
+		    break;
+		 }
+	   default:
+		    break;
+    }
+    emit robScoreChanged((int) score);
+}
 
 
 void cbRobot::updateScore()

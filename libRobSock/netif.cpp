@@ -127,10 +127,24 @@ bool Port::init_local(void)
 	local_addr.sin_addr.s_addr	= htonl(INADDR_ANY) ;
 	local_addr.sin_port		= htons(localport) ;
 
+
+
 	if (bind(socketfd, (struct sockaddr *)&local_addr, sizeof(local_addr)) < 0)
         return false ;
 
     return true;
+}
+
+bool Port::SetRcvTimeout(int sec, int usec)
+{
+	struct timeval timeout;      
+    timeout.tv_sec = sec;
+    timeout.tv_usec = usec;
+    
+    if (setsockopt (socketfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
+        return false;
+
+	return true;
 }
 
 bool Port::init_remote(void)
