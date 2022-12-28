@@ -52,6 +52,7 @@ class Mapper:
     def __init__(self, start: Tuple[int, int], nbeacons: int) -> 'Mapper':
         self.start = start
         self.labMap = [['.']*self.size[0] for _ in range(self.size[1])]
+        self.labMap[self.size[1] // 2][self.size[0] // 2] = 'I'
         self.checkpoints = {}
         self.nbeacons = nbeacons
 
@@ -60,23 +61,20 @@ class Mapper:
             print(''.join(row).replace('.', '\033[104m.\033[0m'))
         print('\n' * 2)
 
-    def visit(self, x: int, y: int, angle: float, ground: int = -1) -> None:
-        x = round(x - self.start[0]) + int(self.size[0] / 2)
-        y = round(y - self.start[1]) + int(self.size[1] / 2)
+    def check(self, x, y):
+        return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 
-        dir = ['-', '|'][round(angle / 90) % 2]
-        if self.labMap[y][x] != 'x':
-            self.labMap[y][x] = dir
+    def map_point(self, x, y):
+        return (round(x - self.start[0]) + self.size[0] // 2,
+                round(y - self.start[1]) + self.size[1] // 2)
 
-        if ground != -1:
-            self.checkpoints[ground] = (x, y)
+    def visit_ground(self, x: int, y: int, ground: int) -> None:
+        x, y = self.map_point(x, y)
+        self.checkpoints[ground] = (x, y)
 
     def explore_inter(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        #print('explore_inter', x, y, line)
-        x = round(x - self.start[0]) + int(self.size[0] / 2)
-        y = round(y - self.start[1]) + int(self.size[1] / 2)
+        x, y = self.map_point(x, y)
 
-        # print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -88,38 +86,51 @@ class Mapper:
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
 
-        #print(d, y, x, line)
+        # Connect previous intersection with new discovered intersection
+        paint = False
+        dir = ['-', '|'][angle % 2]
+        i = 1
+        while True:
+            py, px = y + dy*i, x - dx*i
+            if paint:
+                self.labMap[py][px] = dir
+                if i == 1:
+                    break
+                i -= 1
+            else:
+                if not self.check(px, py):
+                    break
+                if self.labMap[py][px] in ('x', 'I'):
+                    paint = True
+                    i -= 1
+                    continue
+                i += 1
 
         if all(line[4:]):        # right
             py, px = d[2][0], d[2][1]
-            #print("rigth", self.labMap[py][px])
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
             py2, px2 = y - 2*dx, x - 2*dy
-            if self.labMap[py2][px2] == 'x':
+            if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                 dir = ['|', '-'][angle % 2]
                 self.labMap[py][px] = dir
 
         if all(line[:3]):        # left
             py, px = d[1][0], d[1][1]
-            #print("left", self.labMap[py][px])
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
             py2, px2 = y + 2*dx, x + 2*dy
-            if self.labMap[py2][px2] == 'x':
+            if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                 dir = ['|', '-'][angle % 2]
                 self.labMap[py][px] = dir
 
         self.print_map()
 
     def make_decision(self, x: int, y: int, angle: float, line: List[int]) -> None:
-        #print('make_decision', x, y, line)
-        x = round(x - self.start[0]) + int(self.size[0] / 2)
-        y = round(y - self.start[1]) + int(self.size[1] / 2)
+        x, y = self.map_point(x, y)
 
-        # print(angle)
         m = 1 if angle < 2 else -1
         dir = angle % 2
         self.labMap[y][x] = 'x'
@@ -131,32 +142,30 @@ class Mapper:
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
 
-        #print(d, y, x, line)
-
         if line[3]:
             py, px = d[0][0], d[0][1]
-            if self.labMap[py][px] == '.':
+            if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
                 # remove unnecessary *
                 py2, px2 = y - 2*dy, x + 2*dx
-                if self.labMap[py2][px2] == 'x':
+                if self.check(px2, py2) and self.labMap[py2][px2] == 'x':
                     dir = ['-', '|'][angle % 2]
                     self.labMap[py][px] = dir
                 self.print_map()
 
         py, px = d[2][0], d[2][1]
         print("rigth", self.labMap[py][px])
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.RIGHT
 
         py, px = d[1][0], d[1][1]
         print("left", self.labMap[py][px])
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.LEFT
 
         py, px = d[0][0], d[0][1]
         print("front", self.labMap[py][px])
-        if self.labMap[py][px] == '*':
+        if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.NONE
 
         return Rotation.BACK
@@ -178,7 +187,7 @@ class Mapper:
                 for pos in range(len(iteration[:-1])):
                     cx, cy = iteration[pos]
                     gx, gy = iteration[pos + 1]
-                    d, steps = a_distance(cx, cy, gx, gy, self.labMap)
+                    d, steps = a_distance(cx, cy, gx, gy, self)
 
                     curr_dist += d
                     curr_steps.extend(steps)
@@ -199,17 +208,13 @@ class Mapper:
 class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
         CRobLinkAngs.__init__(self, rob_name, rob_id, angles, host)
-        self.prev_measures = [0.5]*7
         self.prev_x = self.prev_y = self.prev_a = None
+        self.prev_measures = []
         self.prev_rPow = 0
         self.prev_lPow = 0
-
-        self.action = "moving"
-
-        self.is_rotating_to: Direction = None
-
         self.prev_out = (0, 0)
-
+        self.action = "moving"
+        self.is_rotating_to: Direction = None
         self.has_plan = False
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
@@ -232,12 +237,10 @@ class MyRob(CRobLinkAngs):
 
         self.readSensors()
         self.goal = (self.measures.x, self.measures.y)
-        self.gps_x, self.gps_y = (self.measures.x, self.measures.y)
+        self.gps_x, self.gps_y = self.goal
+        self.prev_x, self.prev_y = self.goal
         self.start = self.goal
-        # print(self.goal)
         self.map = Mapper(self.goal, self.nBeacons)
-        self.prev_out = (0, 0)
-        self.prev_measures = []
         self.is_rotating_to = Direction(round(
             (self.measures.compass + 360) / 90) % 4)
 
@@ -286,14 +289,20 @@ class MyRob(CRobLinkAngs):
         # TODO: compass vai ter noise
         #theta = self.measures.compass + rot
 
-        self.gps_x += lin*cos(self.measures.compass)
-        self.gps_y += lin*sin(self.measures.compass)
+        self.gps_x += lin*cos(self.measures.compass * pi / 180)
+        self.gps_y += lin*sin(self.measures.compass * pi / 180)
 
     def get_gps(self):
         print(bcolors.RED, bcolors.BOLD, self.gps_x, self.gps_y,
               '==', self.measures.x, self.measures.y, bcolors.END)
-        # return self.gps_x, self.gps_y
+        return self.gps_x, self.gps_y
         return self.measures.x, self.measures.y
+
+    def relative_coord(self, point):
+        return (point[0] - self.start[0], point[1] - self.start[1])
+
+    def rounded_relative_coord(self, point):
+        return (round(point[0] - self.start[0]), round(point[1] - self.start[1]))
 
     def get_measures(self):
         if len(self.prev_measures) > 2:
@@ -334,9 +343,12 @@ class MyRob(CRobLinkAngs):
             lPow, rPow = self.__action_moving(cx, cy, a, measures)
 
             # Make robot visit next position and paint map
-            if self.prev_x and self.prev_x != x or self.prev_y != y:
-                self.map.visit(cx, cy, self.measures.compass,
-                               self.measures.ground)
+            # print(bcolors.BLUE, bcolors.BOLD, self.rounded_relative_coord((self.prev_x, self.prev_y)), self.rounded_relative_coord((self.gps_x, self.gps_y)), bcolors.END)
+            # if self.rounded_relative_coord((self.prev_x, self.prev_y)) != self.rounded_relative_coord((self.gps_x, self.gps_y)):
+            #     self.map.visit(cx, cy, self.measures.compass,
+            #                    self.measures.ground)
+            if self.measures.ground != -1:
+                self.map.visit_ground(cx, cy, self.measures.ground)
 
         elif self.action in ("searching", "search_move", "search_rotate", "stop"):
             # Robot follow steps to reach the destination from search()
@@ -356,7 +368,6 @@ class MyRob(CRobLinkAngs):
         self.update_gps_measures()
         print(bcolors.BOLD, "prev_out {:.3f} {:.3f} ".format(
             self.prev_out[0], self.prev_out[1]), "pow {:.3f} {:.3f}".format(lPow, rPow), bcolors.END)
-        return
 
     def __action_moving(self, cx, cy, a, measures) -> Tuple[float, float]:
 
@@ -390,6 +401,12 @@ class MyRob(CRobLinkAngs):
 
         # print(self.measures.lineSensor)
         if self.action == 'stop':
+            # self.gps_x, self.gps_y = (
+            #     self.start[0] + round(self.gps_x - self.start[0]),
+            #     self.start[1] + round(self.gps_y - self.start[1])
+            # )
+            self.gps_x, self.gps_y = (self.measures.x, self.measures.y)
+
             dir = self.map.make_decision(cx, cy, a, measures)
 
             self.action = "rotating"
@@ -455,6 +472,7 @@ class MyRob(CRobLinkAngs):
             print(bcolors.PINK, 'search_rotate', bcolors.END, end=' ')
             lPow, rPow = self.rotate()
             if self.action == 'stop':
+                self.gps_x, self.gps_y = (self.measures.x, self.measures.y)
                 self.action = 'searching'
 
         if self.action == 'search_move':
@@ -506,7 +524,6 @@ class MyRob(CRobLinkAngs):
             a2 = self.measures.compass * pi / 180
 
             a0 = a1 - a2
-            # print(f'a0={a0:6.2f}  cos(a0)={cos(a0):5.2f}  sin(a0)={sin(a0):5.2f}')
 
             c = cos(a0)
             s = sin(a0)
@@ -517,8 +534,6 @@ class MyRob(CRobLinkAngs):
 
             lPwr = ((2*(n1 - min_) / rng_) - 1) * min(dist, 0.15)
             rPwr = ((2*(n2 - min_) / rng_) - 1) * min(dist, 0.15)
-
-            #print(bcolors.BOLD, f"i want ({lPwr:6.3f},{rPwr:6.3f})", bcolors.END)
 
             lPwr = 2*lPwr - self.prev_out[0]
             rPwr = 2*rPwr - self.prev_out[1]
@@ -627,7 +642,7 @@ class MyRob(CRobLinkAngs):
         for i, row in enumerate(self.map.labMap):
             for j, col in enumerate(row):
                 if col == '*':
-                    d, s = a_distance(cx, cy, j, i, self.map.labMap)
+                    d, s = a_distance(cx, cy, j, i, self.map)
                     if not min_dist or min_dist > d:
                         min_dist = d
                         steps = s
@@ -640,6 +655,12 @@ class MyRob(CRobLinkAngs):
 
 def a_distance(cx, cy, gx, gy, map) -> Tuple[float, List[Tuple[float, float]]]:
     """Returns the a* distance between the current position and the goal"""
+
+    class Node:
+        def __init__(self, parent=None, position=None, distance=0):
+            self.parent = parent
+            self.position = position
+            self.distance = distance
 
     queue: List[Node] = [Node(position=(cx, cy))]
     visited: List[Node] = [Node(position=(cx, cy))]
@@ -658,22 +679,22 @@ def a_distance(cx, cy, gx, gy, map) -> Tuple[float, List[Tuple[float, float]]]:
             return d, list(reversed(final))
 
         # NORTH
-        if map[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
+        if map.check(x, y + 1) and map.labMap[y + 1][x] in ("-", "|", "x", "*") and (x, y + 1) not in visited:
             # TODO: change distance to take into consideration the rotations
             queue.append(Node(parent=n, position=(x, y + 1), distance=d+1))
             visited.append((x, y + 1))
         # SOUTH
-        if map[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
+        if map.check(x, y - 1) and map.labMap[y - 1][x] in ("-", "|", "x", "*") and (x, y - 1) not in visited:
             # TODO: change distance to take into consideration the rotations
             queue.append(Node(parent=n, position=(x, y - 1), distance=d+1))
             visited.append((x, y - 1))
         # EAST
-        if map[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
+        if map.check(x + 1, y) and map.labMap[y][x + 1] in ("-", "|", "x", "*") and (x + 1, y) not in visited:
             # TODO: change distance to take into consideration the rotations
             queue.append(Node(parent=n, position=(x + 1, y), distance=d+1))
             visited.append((x + 1, y))
         # WEST
-        if map[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
+        if map.check(x - 1, y) and map.labMap[y][x - 1] in ("-", "|", "x", "*") and (x - 1, y + 1) not in visited:
             # TODO: change distance to take into consideration the rotations
             queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
             visited.append((x - 1, y))
