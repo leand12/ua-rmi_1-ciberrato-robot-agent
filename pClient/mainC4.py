@@ -77,7 +77,8 @@ class Mapper:
 
         m = 1 if angle < 2 else -1
         dir = angle % 2
-        self.labMap[y][x] = 'x'
+        if self.labMap[y][x] != 'I':
+            self.labMap[y][x] = 'x'
 
         dy, dx = -dir * m, abs(dir - 1) * m
         d = [
@@ -133,7 +134,6 @@ class Mapper:
 
         m = 1 if angle < 2 else -1
         dir = angle % 2
-        self.labMap[y][x] = 'x'
 
         dy, dx = -dir * m, abs(dir - 1) * m
         d = [
@@ -154,20 +154,14 @@ class Mapper:
                 self.print_map()
 
         py, px = d[2][0], d[2][1]
-        print("rigth", self.labMap[py][px])
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.RIGHT
-
         py, px = d[1][0], d[1][1]
-        print("left", self.labMap[py][px])
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.LEFT
-
         py, px = d[0][0], d[0][1]
-        print("front", self.labMap[py][px])
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.NONE
-
         return Rotation.BACK
 
     def save_to_file(self):
@@ -371,10 +365,15 @@ class MyRob(CRobLinkAngs):
 
     def __action_moving(self, cx, cy, a, measures) -> Tuple[float, float]:
 
-        # Make robot visit intersection
-        detected_inter = ((all(self.prev_measures[-1][:3]) or all(
-            self.prev_measures[-1][4:])) and self.prev_measures[-1][3]) and not self.action == 'stopping'
-        if detected_inter:
+        if not any(measures) and not self.action == 'stopping':
+            # Explore dead end
+            self.map.explore_inter(cx, cy, a, measures)
+            self.action = "rotating"
+            self.is_rotating_to = Direction((a + 2) % 4)
+
+        if ((all(self.prev_measures[-1][:3]) or all(self.prev_measures[-1][4:]))
+                and self.prev_measures[-1][3]) and not self.action == 'stopping':
+            # Make robot visit intersection
             if measures != self.prev_measures[-1]:
                 print(bcolors.RED, 'STOP1', bcolors.END)
                 return -self.prev_out[0], -self.prev_out[1]
@@ -388,9 +387,8 @@ class MyRob(CRobLinkAngs):
             )
             self.action = 'stopping'
 
-        detected_no_inter_major = not (all(measures[:1]) or all(
-            measures[6:])) and self.action == 'stopping'
-        if detected_no_inter_major:
+        if not (measures[0] or measures[6]) and self.action == 'stopping':
+            # Make robot finish intersection and stop
             if measures != self.prev_measures[-1]:
                 print(bcolors.RED, 'STOP2', bcolors.END)
                 return -self.prev_out[0], -self.prev_out[1]
@@ -399,7 +397,6 @@ class MyRob(CRobLinkAngs):
         if self.action not in ("stop"):
             lPow, rPow = self.follow_line2(measures)
 
-        # print(self.measures.lineSensor)
         if self.action == 'stop':
             # self.gps_x, self.gps_y = (
             #     self.start[0] + round(self.gps_x - self.start[0]),
@@ -446,7 +443,6 @@ class MyRob(CRobLinkAngs):
             return 0, 0
 
         nx, ny = self.steps[0]
-        #print(a, x ,y, d, self.steps, nx, ny)
         if self.action == 'searching':
             print(bcolors.BLUE, 'searching', "({:.3f}, {:.3f}) ".format(
                 nx, ny), self.steps, d, bcolors.END)
@@ -699,13 +695,8 @@ def a_distance(cx, cy, gx, gy, map) -> Tuple[float, List[Tuple[float, float]]]:
             queue.append(Node(parent=n, position=(x - 1, y), distance=d+1))
             visited.append((x - 1, y))
         queue.sort(key=lambda x: x.distance)
-
-
-class Node:
-    def __init__(self, parent=None, position=None, distance=0):
-        self.parent = parent
-        self.position = position
-        self.distance = distance
+    # FIXME: somehow it reached here and resulted in an error
+    return 0, []
 
 
 class Map():
@@ -732,7 +723,6 @@ class Map():
                             self.labMap[row][c//3*2] = '-'
                         else:
                             None
-
             i = i+1
 
 
