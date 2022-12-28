@@ -48,5 +48,12 @@ case $challenge in
         python3 pClient/mainC3.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
         #mv your_pathfile $outfile.path           # if needed
         ;;
+    4)
+        rm -f *.path *.map  # do not remove this line
+
+        # how to call agent for challenge 3
+        python3 pClient/mainC4.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
+        #mv your_pathfile $outfile.path           # if needed
+        ;;
 esac
 
