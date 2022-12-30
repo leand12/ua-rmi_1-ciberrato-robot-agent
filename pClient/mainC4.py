@@ -97,7 +97,8 @@ class Mapper:
 
         if not any(line):
             py, px = d[0]
-            self.labMap[py][px] = '.'
+            if self.check(px, py):
+                self.labMap[py][px] = '.'
 
         # Connect previous intersection with new discovered intersection
         paint = False
@@ -191,7 +192,6 @@ class Mapper:
             for y in reversed(range(self.size[1])):
                 for x in range(self.size[0]):
                     for b, (bx, by) in self.checkpoints.items():
-                        print((x, y) , (bx, by), (x, y) == (bx, by))
                         if (x, y) == (bx, by):
                             fp.write(str(b))
                             break
@@ -199,7 +199,7 @@ class Mapper:
                         if y % 2 == x % 2:
                             fp.write(' ')
                         else:
-                            fp.write(self.labMap[y][x].replace('.', ' '))
+                            fp.write(self.labMap[y][x].replace('.', ' ').replace('*', ' '))
                 fp.write('\n')
 
     def save_path_to_file(self):
@@ -246,7 +246,8 @@ class MyRob(CRobLinkAngs):
         self.prev_out = (0, 0)
         self.action = "moving"
         self.is_rotating_to: Direction = None
-        self.has_plan = False
+        self.going_home = False
+        self.time = 500
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
@@ -267,12 +268,13 @@ class MyRob(CRobLinkAngs):
         stopped_state = 'run'
 
         self.readSensors()
-        self.goal = (self.measures.x, self.measures.y)
-        self.gps_x, self.gps_y = self.goal
+        self.goal = None
+        self.goal_dist = None
+        self.start = (self.measures.x, self.measures.y)
+        self.gps_x, self.gps_y = self.start
         self.last_x, self.last_y = None, None
         self.compass = self.measures.compass
-        self.prev_x, self.prev_y = self.goal
-        self.start = self.goal
+        self.prev_x, self.prev_y = self.start
         print("START", self.start)
         self.map = Mapper(self.start, self.nBeacons)
         self.is_rotating_to = Direction(round(
@@ -361,10 +363,7 @@ class MyRob(CRobLinkAngs):
         return x, y
 
     def get_gps(self):
-        # print(bcolors.RED, bcolors.BOLD, self.gps_x, self.gps_y,
-        #       '==', self.measures.x, self.measures.y, bcolors.END)
         return self.gps_x, self.gps_y
-        return self.measures.x, self.measures.y
 
     def relative_coord(self, point):
         return (point[0] - self.start[0], point[1] - self.start[1])
@@ -398,6 +397,15 @@ class MyRob(CRobLinkAngs):
         print(f"{self.get_compass():.1f}",
               f"{self.compass:.1f}", self.measures.compass, self.action, bcolors.END)
 
+        if self.time < self.measures.time:
+            self.time += 500
+            self.map.save_map_to_file()
+
+        if self.going_home and euclidean((cx, cy), self.start) < 0.2:
+            self.driveMotors(0, 0)
+            self.finish()
+            quit()
+
         if self.action == 'rotating':
             # Rotates the robot
             lPow, rPow = self.rotate()
@@ -418,11 +426,6 @@ class MyRob(CRobLinkAngs):
 
             lPow, rPow = self.__action_moving(cx, cy, a, measures)
 
-            # Make robot visit next position and paint map
-            # print(bcolors.BLUE, bcolors.BOLD, self.rounded_relative_coord((self.prev_x, self.prev_y)), self.rounded_relative_coord((self.gps_x, self.gps_y)), bcolors.END)
-            # if self.rounded_relative_coord((self.prev_x, self.prev_y)) != self.rounded_relative_coord((self.gps_x, self.gps_y)):
-            #     self.map.visit(cx, cy, self.measures.compass,
-            #                    self.measures.ground)
             if self.measures.ground != -1 and self.close_to_cell_center(cx, cy):
                 self.map.visit_ground(cx, cy, self.measures.ground)
 
@@ -462,18 +465,10 @@ class MyRob(CRobLinkAngs):
             px, py = self.__calculate_gps()
             self.map.explore_inter(px, py, a, measures)
             self.action = 'stopping'
-            self.goal = px, py
+            self.goal = cx + .5*self.is_rotating_to.next[0], cy + .5*self.is_rotating_to.next[1]
 
         if self.action == 'stopping' and euclidean((cx, cy), self.goal) < 0.1:
             self.action = 'stop'
-
-        # if not (measures[0] or measures[6]) and self.action == 'stopping':
-        #     # Make robot finish intersection and stop
-        #     if measures != self.prev_measures[-1]:
-        #         print(bcolors.RED, 'STOP2', bcolors.END)
-        #         return 0.01, 0.01
-        #     self.action = 'stop'
-        #     return -self.prev_out[0], -self.prev_out[1]
 
         if self.action not in ("stop"):
             lPow, rPow = self.follow(measures)
@@ -497,6 +492,9 @@ class MyRob(CRobLinkAngs):
                 print(bcolors.YELLOW, bcolors.BOLD, steps, bcolors.END)
                 self.steps = self.convert_steps(steps)
                 print(bcolors.YELLOW, bcolors.BOLD, self.steps, bcolors.END)
+                if not self.steps:
+                    return 0, 0
+                self.goal = self.steps[0][1]
                 self.action = 'searching'
                 #self.is_rotating_to = Direction((a + 2) % 4)
             elif dir == Rotation.NONE:
@@ -509,8 +507,6 @@ class MyRob(CRobLinkAngs):
     def close_to_cell_center(self, x, y):
         x -= self.start[0]
         y -= self.start[1]
-        print(bcolors.YELLOW, bcolors.BOLD, x, y, abs(x - round(x))
-              < 0.3 and abs(y - round(y)) < 0.3, bcolors.END)
         return abs(x - round(x)) < 0.3 and abs(y - round(y)) < 0.3
 
     def __action_searching(self, cx, cy, a, measures) -> Tuple[float, float]:
@@ -529,9 +525,9 @@ class MyRob(CRobLinkAngs):
             if measures != self.prev_measures[-1]:
                 print(bcolors.RED, 'STOP1', bcolors.END)
                 return -self.prev_out[0], -self.prev_out[1]
-            self.goal = self.steps[0][1]
+            self.goal = cx + .5*self.is_rotating_to.next[0], cy + .5*self.is_rotating_to.next[1]
 
-        if self.action == 'searching' and euclidean((cx, cy), self.steps[0][1]) < 0.1:
+        if self.action == 'searching' and (self.goal and euclidean((cx, cy), self.goal) < 0.1):
             self.action = "search_rotate"
             self.reset_gps()
             self.is_rotating_to, _ = self.steps.pop(0)
@@ -555,7 +551,7 @@ class MyRob(CRobLinkAngs):
     def follow(self, measures) -> Tuple[float, float]:
 
         def follow_angle(angle: int, pow: int = 0.08) -> Tuple[float, float]:
-            a2 = self.get_compass() * pi / 180
+            a2 = radians(self.get_compass())
             a0 = angle - a2
 
             c = cos(a0)
@@ -616,26 +612,12 @@ class MyRob(CRobLinkAngs):
             angle = round(self.get_compass() / 90) * pi / 2
             return follow_angle(angle)
 
-            # Is moving through intersection
-            x2, y2 = self.goal
-            x1, y1 = self.gps_x, self.gps_y
-            dist = euclidean((x1, y1), self.goal)
-
-            # if x2 == x1 and y1 == y2:
-            #     self.action = 'stop'
-            #     return tuple(-a for a in self.prev_out)
-
-            angle = atan2(y2 - y1, x2 - x1)
-            return follow_angle(angle, min(dist, 0.15))
-
         if not (any(measures[:2]) or any(measures[5:])):
             print('follow_angle + follow_line')
             # Only detects line in the center
             lPow1, rPow1 = follow_line(measures)
             angle = round(self.get_compass() / 90) * pi / 2
             lPow2, rPow2 = follow_angle(angle)
-            # print(bcolors.CYAN, "FOLLOW ANGLE", measures,  mean((lPow2, lPow2)), mean(
-            #     (rPow2, rPow2)), self.get_compass(), round(self.get_compass() / 90) * 90, bcolors.END)
             return mean((lPow1, lPow2)), mean((rPow1, rPow2))
 
         print('follow_line')
@@ -687,9 +669,12 @@ class MyRob(CRobLinkAngs):
                         steps = s
 
         if min_dist == None:
+            self.going_home = True
             self.map.save_map_to_file()
             self.map.save_path_to_file()
-            quit()
+            _, s = a_distance(cx, cy, 24, 10, self.map)
+            print(bcolors.RED, bcolors.BOLD, s, bcolors.END)
+            return [(cx, cy)] + s
 
         return [(cx, cy)] + steps
 
@@ -701,7 +686,6 @@ class MyRob(CRobLinkAngs):
 
             if self.map.labMap[y][x] == "x":
                 nx, ny = steps[s + 1]
-
                 if (nx, ny) == (x - 1, y):
                     a = Direction.WEST
                 elif (nx, ny) == (x + 1, y):
@@ -710,11 +694,7 @@ class MyRob(CRobLinkAngs):
                     a = Direction.SOUTH
                 else:
                     a = Direction.NORTH
-                print(bcolors.YELLOW, bcolors.BOLD,
-                      f"appending rotation {a}", bcolors.END)
-
                 rotations.append((a, (x - self.map.size[0] // 2 + self.start[0], y - self.map.size[1] // 2 + self.start[1])))
-
         return rotations
 
 
