@@ -95,10 +95,15 @@ class Mapper:
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
 
+        if not any(line):
+            py, px = d[0]
+            self.labMap[py][px] = '.'
+
         # Connect previous intersection with new discovered intersection
         paint = False
         dir = ['-', '|'][angle % 2]
         i = 1
+        ii = None
         while True:
             py, px = y + dy*i, x - dx*i
             if paint:
@@ -109,15 +114,21 @@ class Mapper:
                 i -= 1
             else:
                 if not self.check(px, py):
+                    if ii != None:
+                        paint = True
+                        i = ii
+                        continue
                     break
-                if self.labMap[py][px] in ('x', 'I'):
+                if self.labMap[py][px] == 'I':
+                    ii = i - 1
+                if self.labMap[py][px] == 'x':
                     paint = True
                     i -= 1
                     continue
                 i += 1
 
         if all(line[4:]):        # right
-            py, px = d[2][0], d[2][1]
+            py, px = d[2]
             if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
@@ -127,7 +138,7 @@ class Mapper:
                 self.labMap[py][px] = dir
 
         if all(line[:3]):        # left
-            py, px = d[1][0], d[1][1]
+            py, px = d[1]
             if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
             # remove unnecessary *
@@ -153,8 +164,8 @@ class Mapper:
             (y - dx, x - dy),    # dyr = -dxf, dxr = -dyf
         ]
 
-        if line[3]:
-            py, px = d[0][0], d[0][1]
+        if any(line[2:5]):
+            py, px = d[0]
             if self.check(px, py) and self.labMap[py][px] == '.':
                 self.labMap[py][px] = "*"
                 # remove unnecessary *
@@ -164,23 +175,39 @@ class Mapper:
                     self.labMap[py][px] = dir
                 self.print_map()
 
-        py, px = d[2][0], d[2][1]
+        py, px = d[2]
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.RIGHT
-        py, px = d[1][0], d[1][1]
+        py, px = d[1]
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.LEFT
-        py, px = d[0][0], d[0][1]
+        py, px = d[0]
         if self.check(px, py) and self.labMap[py][px] == '*':
             return Rotation.NONE
         return Rotation.BACK
 
-    def save_to_file(self):
-        with open('simulator/solution.path', 'w') as fp:
+    def save_map_to_file(self):
+        with open('simulator/solution.map', 'w') as fp:
+            for y in reversed(range(self.size[1])):
+                for x in range(self.size[0]):
+                    for b, (bx, by) in self.checkpoints.items():
+                        print((x, y) , (bx, by), (x, y) == (bx, by))
+                        if (x, y) == (bx, by):
+                            fp.write(str(b))
+                            break
+                    else:
+                        if y % 2 == x % 2:
+                            fp.write(' ')
+                        else:
+                            fp.write(self.labMap[y][x].replace('.', ' '))
+                fp.write('\n')
 
+    def save_path_to_file(self):
+        with open('simulator/solution.path', 'w') as fp:
             min_dist = None
             min_steps = []
             checkpoints = [v for k, v in self.checkpoints.items() if k != 0]
+            print(self.checkpoints.items())
             for iteration in itertools.combinations(checkpoints, len(checkpoints)):
                 iteration = list(iteration)
                 iteration.append(self.checkpoints[0])
@@ -207,7 +234,6 @@ class Mapper:
             for s in range(0, len(min_steps), 2):
                 fp.write(str(min_steps[s][0] - fx) +
                          " " + str(min_steps[s][1] - fy) + "\n")
-            exit(1)
 
 
 class MyRob(CRobLinkAngs):
@@ -287,7 +313,9 @@ class MyRob(CRobLinkAngs):
                         self.setReturningLed(False)
                     self.wander()
         except KeyboardInterrupt:
-            self.map.save_to_file()
+            self.map.save_map_to_file()
+            self.map.save_path_to_file()
+            quit()
 
     def update_measures(self):
 
@@ -314,7 +342,7 @@ class MyRob(CRobLinkAngs):
         print(bcolors.BOLD, bcolors.BLUE, self.last_x, self.last_y, 'new', bcolors.END)
 
     def __calculate_gps(self):
-        if self.last_x:
+        if self.last_x != None:
             print(self.is_rotating_to)
             if self.is_rotating_to in (Direction.EAST, Direction.WEST):
                 x, y = (
@@ -327,8 +355,8 @@ class MyRob(CRobLinkAngs):
         else:
             print(self.start)
             x, y = (
-                self.start[0] + round(self.gps_x - self.start[0]),
-                self.start[1] + round(self.gps_y - self.start[1])
+                self.start[0] + round(self.gps_x + .4*self.is_rotating_to.next[0] - self.start[0]),
+                self.start[1] + round(self.gps_y + .4*self.is_rotating_to.next[1] - self.start[1])
             )
         return x, y
 
@@ -378,7 +406,7 @@ class MyRob(CRobLinkAngs):
                 self.prev_measures = []
                 self.action = 'moving'
 
-        elif self.action in ('moving', 'stopping'):
+        elif self.action in ('moving', 'stopping', 'stop'):
             # Robot moves to the self.goal
             #
             # The action changes to stopping if it has just seen an
@@ -395,10 +423,10 @@ class MyRob(CRobLinkAngs):
             # if self.rounded_relative_coord((self.prev_x, self.prev_y)) != self.rounded_relative_coord((self.gps_x, self.gps_y)):
             #     self.map.visit(cx, cy, self.measures.compass,
             #                    self.measures.ground)
-            if self.measures.ground != -1:
+            if self.measures.ground != -1 and self.close_to_cell_center(cx, cy):
                 self.map.visit_ground(cx, cy, self.measures.ground)
 
-        elif self.action in ("searching", "search_move", "search_rotate", "stop"):
+        elif self.action in ("searching", "search_move", "search_rotate"):
             # Robot follow steps to reach the destination from search()
             #
             # It follows a list of positions. When it needs to rotate, the robot
@@ -432,21 +460,20 @@ class MyRob(CRobLinkAngs):
                 print(bcolors.RED, 'STOP1', bcolors.END)
                 return -self.prev_out[0], -self.prev_out[1]
             px, py = self.__calculate_gps()
-            self.map.explore_inter(
-                px, py,
-                a, measures)
-            self.goal = (
-                self.gps_x + .4*self.is_rotating_to.next[0],
-                self.gps_y + .4*self.is_rotating_to.next[1]
-            )
+            self.map.explore_inter(px, py, a, measures)
             self.action = 'stopping'
+            self.goal = px, py
 
-        if not (measures[0] or measures[6]) and self.action == 'stopping':
-            # Make robot finish intersection and stop
-            if measures != self.prev_measures[-1]:
-                print(bcolors.RED, 'STOP2', bcolors.END)
-                return -self.prev_out[0], -self.prev_out[1]
+        if self.action == 'stopping' and euclidean((cx, cy), self.goal) < 0.1:
             self.action = 'stop'
+
+        # if not (measures[0] or measures[6]) and self.action == 'stopping':
+        #     # Make robot finish intersection and stop
+        #     if measures != self.prev_measures[-1]:
+        #         print(bcolors.RED, 'STOP2', bcolors.END)
+        #         return 0.01, 0.01
+        #     self.action = 'stop'
+        #     return -self.prev_out[0], -self.prev_out[1]
 
         if self.action not in ("stop"):
             lPow, rPow = self.follow(measures)
@@ -487,7 +514,6 @@ class MyRob(CRobLinkAngs):
         return abs(x - round(x)) < 0.3 and abs(y - round(y)) < 0.3
 
     def __action_searching(self, cx, cy, a, measures) -> Tuple[float, float]:
-        x, y = self.map.map_point(cx, cy)
         # check if needs to rotate
 
         if len(self.steps) == 0 and not self.action == "search_rotate":
@@ -497,15 +523,22 @@ class MyRob(CRobLinkAngs):
                 round((self.get_compass() + 360) / 90) % 4)
             return 0, 0
 
-        if self.action == "searching":
-            print(self.gps_x, self.gps_y, self.steps[0], x, y)
-            if self.map.labMap[y][x] == "x" and self.steps[0][1] == (x, y) and self.close_to_cell_center(cx, cy):
-                # if the reaches an intersection check which direction it needs to go
-                self.action = "search_rotate"
-                self.reset_gps()
-                self.is_rotating_to, _ = self.steps.pop(0)
-            else:
-                lPow, rPow = self.follow(measures)
+        if ((all(self.prev_measures[-1][:3]) or all(self.prev_measures[-1][4:]))
+                and self.prev_measures[-1][3]) and not self.action == 'stopping':
+            # Make robot visit intersection
+            if measures != self.prev_measures[-1]:
+                print(bcolors.RED, 'STOP1', bcolors.END)
+                return -self.prev_out[0], -self.prev_out[1]
+            self.goal = self.steps[0][1]
+
+        if self.action == 'searching' and euclidean((cx, cy), self.steps[0][1]) < 0.1:
+            self.action = "search_rotate"
+            self.reset_gps()
+            self.is_rotating_to, _ = self.steps.pop(0)
+            self.goal = None
+
+        if not self.action == "search_rotate":
+            lPow, rPow = self.follow(measures)
 
         if self.action == 'search_rotate':
             # rotate
@@ -521,7 +554,7 @@ class MyRob(CRobLinkAngs):
 
     def follow(self, measures) -> Tuple[float, float]:
 
-        def follow_angle(angle: int, pow: int = 0.15) -> Tuple[float, float]:
+        def follow_angle(angle: int, pow: int = 0.08) -> Tuple[float, float]:
             a2 = self.get_compass() * pi / 180
             a0 = angle - a2
 
@@ -540,7 +573,7 @@ class MyRob(CRobLinkAngs):
 
             return lPow, rPow
 
-        def follow_line(measures: List[int], pow: int = 0.15) -> Tuple[float, float]:
+        def follow_line(measures: List[int], pow: int = 0.08) -> Tuple[float, float]:
             w = [1, 0.2, 0.04]
 
             n1 = n2 = 0.12
@@ -569,6 +602,13 @@ class MyRob(CRobLinkAngs):
         if len(self.prev_measures) > 1 and not self.action == 'stopping':
             measures = [(self.prev_measures[-2][i]*0.3 + self.prev_measures[-1][i]*0.7)
                         for i in range(7)]
+
+        if self.action == 'stopping' or (self.action == 'searching' and self.goal):
+            x2, y2 = self.goal
+            x1, y1 = self.gps_x, self.gps_y
+            dist = euclidean((x1, y1), self.goal)
+            angle = atan2(y2 - y1, x2 - x1)
+            return follow_angle(angle, min(dist, 0.08)) 
 
         if (any(measures[:2]) or any(measures[5:])) and measures[3]:
             print('follow_angle')
@@ -647,7 +687,9 @@ class MyRob(CRobLinkAngs):
                         steps = s
 
         if min_dist == None:
-            self.map.save_to_file()
+            self.map.save_map_to_file()
+            self.map.save_path_to_file()
+            quit()
 
         return [(cx, cy)] + steps
 
@@ -671,7 +713,7 @@ class MyRob(CRobLinkAngs):
                 print(bcolors.YELLOW, bcolors.BOLD,
                       f"appending rotation {a}", bcolors.END)
 
-                rotations.append((a, steps[s]))
+                rotations.append((a, (x - self.map.size[0] // 2 + self.start[0], y - self.map.size[1] // 2 + self.start[1])))
 
         return rotations
 
